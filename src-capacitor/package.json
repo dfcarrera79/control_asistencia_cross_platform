@@ -1,0 +1,14 @@
+{
+  "name": "control-asistencia",
+  "version": "0.0.1",
+  "description": "Proyecto de control de asistencia para Farmacias Americanas y distribuidor Apromed",
+  "author": "dfcarrera79 <44879886+dfcarrera79@users.noreply.github.com>",
+  "private": true,
+  "dependencies": {
+    "@capacitor/android": "^5.2.1",
+    "@capacitor/app": "^5.0.0",
+    "@capacitor/cli": "^5.0.0",
+    "@capacitor/core": "^5.0.0",
+    "@capacitor/splash-screen": "^5.0.6"
+  }
+}
