@@ -12,13 +12,11 @@
         />
 
         <q-toolbar-title
-          class="text-h4 row text-uppercase"
+          class="text-h5 row text-uppercase"
           style="font-family: 'Bebas Neue'"
         >
           Control de asistencia
         </q-toolbar-title>
-
-        <div>{{ expires }}</div>
 
         <div class="row items-center content-center q-mr-md">
           <q-btn flat @click="cerrarSesion">
@@ -54,44 +52,18 @@ import { ref } from 'vue';
 import EssentialLink, {
   EssentialLinkProps,
 } from 'components/EssentialLink.vue';
-import { LocalStorage } from 'quasar';
+import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
-import jwtDecode from 'jwt-decode';
+import { LocalStorage } from 'quasar';
 
-const win: Window = window;
-const authStore = useAuthStore();
-const expires = ref('');
+const router = useRouter();
+const appStore = useAuthStore();
 
 const cerrarSesion = () => {
-  win.location = 'https://www.loxasoluciones.com/';
+  appStore.estaLogeado = false;
+  router.push('/login');
   LocalStorage.clear();
 };
-
-const checkTokenExpiration = () => {
-  const token = authStore.token;
-  const decodedToken = jwtDecode(token);
-  const expirationTimestamp = decodedToken.exp;
-  const currentTime = Math.floor(Date.now() / 1000); // Current timestamp in seconds
-  const tokenExpirationTime = expirationTimestamp - currentTime;
-
-  if (decodedToken.exp < currentTime) {
-    // Token has expired, log the user out
-    cerrarSesion();
-  } else {
-    // Calculate remaining time
-    const remainingTime = tokenExpirationTime * 1000; // Convert to milliseconds
-
-    const remainingMinutes = Math.floor(remainingTime / 60000); // 1 minute = 60,000 milliseconds
-    const remainingSeconds = Math.floor((remainingTime % 60000) / 1000); // Remaining seconds
-
-    expires.value = `Token expires in ${remainingMinutes} minutes and ${remainingSeconds} seconds`;
-  }
-};
-
-// Check token expiration every 5 minutes (300,000 milliseconds)
-const tokenExpirationCheckInterval = setInterval(checkTokenExpiration, 300000);
-
-checkTokenExpiration();
 
 const essentialLinks: EssentialLinkProps[] = [
   {
