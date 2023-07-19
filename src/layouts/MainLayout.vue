@@ -19,7 +19,7 @@
         </q-toolbar-title>
 
         <div class="row items-center content-center q-mr-md">
-          <q-btn flat @click="cerrarSesion">
+          <q-btn dense flat @click="cerrarSesion">
             <div class="q-mr-sm" v-if="!($q.screen.lt.md || $q.screen.lt.sm)">
               Salir
             </div>
