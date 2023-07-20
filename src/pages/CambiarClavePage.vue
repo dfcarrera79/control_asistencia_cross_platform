@@ -1,77 +1,115 @@
 <template>
   <div class="update-password">
     <h4
-      class="row text-uppercase text-primary justify-center content-center"
+      class="row text-uppercase text-grey-8 justify-center content-center"
       style="font-family: 'Bebas Neue'"
     >
-      <q-img
-        src="../assets/loxasoluciones.png"
-        alt="loxasoluciones"
-        width="70%"
-      />
-      Actualizar constraseña
+      <div class="q-pt-md">Cambiar constraseña</div>
     </h4>
-    <form @submit="changePassword(ruc)">
-      <div class="form-group">
-        <label for="newPassword">Nueva contraseña</label>
-        <input
-          id="newPassword"
-          type="password"
-          v-model="newPassword"
-          required
-        />
-      </div>
-      <div class="form-group">
-        <label for="confirmPassword">Confirmar contraseña</label>
-        <input
-          id="confirmPassword"
-          type="password"
-          v-model="confirmPassword"
-          required
-        />
-      </div>
-      <button type="submit">Cambiar contraseña</button>
-    </form>
+    <div class="form-group q-px-md text-grey-8">
+      <label for="newPassword">Nueva contraseña</label>
+      <q-input
+        id="newPassword"
+        :type="isPwdNew ? 'password' : 'text'"
+        v-model="newPassword"
+        required
+      >
+        <template v-slot:append>
+          <q-icon
+            :name="isPwdNew ? 'visibility_off' : 'visibility'"
+            class="cursor-pointer"
+            @click="isPwdNew = !isPwdNew"
+          />
+        </template>
+      </q-input>
+    </div>
+    <div class="form-group q-px-md text-grey-8">
+      <label for="confirmPassword">Confirmar contraseña</label>
+      <q-input
+        id="confirmPassword"
+        :type="isPwdConfirm ? 'password' : 'text'"
+        v-model="confirmPassword"
+        required
+      >
+        <template v-slot:append>
+          <q-icon
+            :name="isPwdConfirm ? 'visibility_off' : 'visibility'"
+            class="cursor-pointer"
+            @click="isPwdConfirm = !isPwdConfirm"
+          />
+        </template>
+      </q-input>
+    </div>
+    <div class="row justify-center">
+      <q-btn
+        class="text-white"
+        dense
+        style="height: 40px; width: 183px"
+        color="primary"
+        label="Cambiar contraseña"
+        @click="changePassword()"
+        :disabled="!passwordsMatch || newPassword === ''"
+      />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { useRoute } from 'vue-router';
+import { useQuasar } from 'quasar';
+import { computed, ref } from 'vue';
+import { useAuthStore } from '../stores/auth';
 import { useAxios } from '../services/useAxios';
+import { Respuesta } from '../components/models';
 import { useMensajes } from '../services/useMensajes';
-import { useRouter } from 'vue-router';
 
+// Data
 const { put } = useAxios();
 const newPassword = ref('');
 const confirmPassword = ref('');
+const authStore = useAuthStore();
 const { mostrarMensaje } = useMensajes();
 const claveActualizada = ref({
   ruc: '',
   clave: '',
 });
-const route = useRoute();
-const ruc = route.params.ruc;
-const router = useRouter();
+const $q = useQuasar();
+const isPwdNew = ref(true);
+const isPwdConfirm = ref(true);
 
-const changePassword = async (ruc: string) => {
+// Methods
+const deducirMensaje = (resp: Respuesta) => {
+  $q.notify({
+    color: resp.error === 'N' ? 'green-4' : 'red-5',
+    textColor: 'white',
+    icon: resp.error === 'N' ? 'cloud_done' : 'warning',
+    message: resp.mensaje,
+  });
+};
+
+const changePassword = async () => {
   // Perform password validation
   claveActualizada.value = {
-    ruc: ruc,
+    ruc: authStore.ruc,
     clave: newPassword.value,
   };
   if (newPassword.value === confirmPassword.value) {
-    await put(
+    const respuesta = await put(
       '/cambiar_clave',
       {},
       JSON.parse(JSON.stringify(claveActualizada.value))
     );
-    // Navigate to the login path
-    router.push('/login');
+    deducirMensaje(respuesta);
+    newPassword.value = '';
+    confirmPassword.value = '';
   } else {
     mostrarMensaje('Error', 'Las contraseñas no coinciden');
   }
 };
+
+// Computed
+const passwordsMatch = computed(
+  () => newPassword.value === confirmPassword.value
+);
 </script>
 
 <style scoped>
@@ -93,13 +131,6 @@ input[type='password'] {
   width: 100%;
   padding: 0.5rem;
   border: 1px solid #ccc;
-}
-
-button[type='submit'] {
-  padding: 0.5rem 1rem;
-  background-color: #007bff;
-  color: #fff;
-  border: none;
-  cursor: pointer;
+  border-radius: 5px;
 }
 </style>

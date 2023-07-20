@@ -12,3 +12,9 @@ export interface Session {
   currentURL: string;
   token: string | null;
 }
+
+export interface Respuesta {
+  error: string;
+  mensaje: string;
+  objetos: number;
+}

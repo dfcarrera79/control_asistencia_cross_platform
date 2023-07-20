@@ -8,13 +8,6 @@
           >
         </div>
         <q-card-section>
-          <!-- <q-input
-            v-model="ruc"
-            debounce="750"
-            label="RUC | CI | Pasaporte"
-            dense
-            :rules="rucRule"
-          /> -->
           <q-input
             v-model="ruc"
             debounce="750"
@@ -76,7 +69,7 @@
           <q-btn
             class="full-width text-white"
             style="height: 40px"
-            color="blue"
+            color="primary"
             label="Ingresar"
             @click="logearse()"
           />
@@ -167,6 +160,9 @@ const logearse = async () => {
     id: id.value,
     clave: clave.value,
   });
+  const objetos = respuesta.objetos[0];
+  authStore.usuario = objetos.razon_social;
+  authStore.ruc = objetos.ruc_cliente;
   Loading.hide();
   if (respuesta.error === 'S') {
     mostrarMensaje('Error', respuesta.mensaje);
@@ -216,34 +212,6 @@ const enviarCorreoRecuperacion = async () => {
     console.error('Error sending email:', error);
   }
 };
-
-// const enviarCorreoRecuperacion = async () => {
-//   const respuesta = await get('/obtener_cliente', {
-//     ruc_cliente: ruc.value,
-//   });
-//   console.log(JSON.stringify(respuesta.objetos));
-
-//   if (respuesta.objetos.length !== 0) {
-//     const respuesta2 = await post(
-//       '/resetear_clave_acceso',
-//       {},
-//       {
-//         correo: correoElectronico.value,
-//         ruc: ruc.value,
-//       }
-//     );
-
-//     if (respuesta2.error === 'S') {
-//       mostrarMensaje('Error', respuesta2.mensaje);
-//       return;
-//     }
-//     mostrarMensaje('Éxito', respuesta2.mensaje);
-//   } else {
-//     mostrarMensaje('Error', 'No existe un cliente con ese RUC');
-//   }
-
-//   mostrarVentana.value = false;
-// };
 </script>
 
 <style>

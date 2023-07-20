@@ -1,8 +1,16 @@
-import { RouteRecordRaw } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import multiguard from 'vue-router-multiguard';
+import {
+  RouteRecordRaw,
+  NavigationGuardNext,
+  RouteLocationNormalized,
+} from 'vue-router';
 
-const estaLogeado = (to, from, next) => {
+const estaLogeado = (
+  to: RouteLocationNormalized,
+  from: RouteLocationNormalized,
+  next: NavigationGuardNext
+) => {
   const appStore = useAuthStore();
   if (appStore.estaLogeado === false) {
     return next({
@@ -25,10 +33,16 @@ const routes: RouteRecordRaw[] = [
       },
     ],
   },
-
   {
-    path: '/cambiar_clave/:ruc',
-    component: () => import('layouts/LoginLayout.vue'),
+    path: '/registro_asistencia',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      { path: '', component: () => import('pages/RegistroAsistenciaPage.vue') },
+    ],
+  },
+  {
+    path: '/cambiar_clave',
+    component: () => import('layouts/MainLayout.vue'),
     children: [
       { path: '', component: () => import('pages/CambiarClavePage.vue') },
     ],

@@ -2,7 +2,7 @@
   <q-page class="column justify-center content-center">
     <div
       id="mensaje"
-      class="text-body1 text-weight-medium"
+      class="text-body1 text-weight-medium q-pa-sm"
       style="text-align: center"
     >
       <q-img src="../assets/loxasoluciones.png" alt="loxasoluciones" />

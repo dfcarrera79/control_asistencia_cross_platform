@@ -30,15 +30,69 @@
     </q-header>
 
     <q-drawer v-model="leftDrawerOpen" show-if-above bordered>
-      <q-list>
-        <q-item-label header> Essential Links </q-item-label>
+      <q-scroll-area
+        style="
+          height: calc(100% - 150px);
+          margin-top: 150px;
+          border-right: 1px solid #ddd;
+        "
+      >
+        <q-list padding>
+          <q-item class="column">
+            <q-separator inset />
+            <div style="color: #636466" class="text-center">Bienvenido</div>
+            <div class="text-weight-bold text-center" style="color: #636466">
+              {{ appStore.usuario }}
+            </div>
+            <q-separator inset />
+          </q-item>
+          <q-item
+            clickable
+            v-ripple
+            to="/registro_asistencia"
+            active-class="my-menu-link"
+          >
+            <q-item-section avatar>
+              <q-icon name="password" color="grey-9" />
+            </q-item-section>
 
-        <EssentialLink
-          v-for="link in essentialLinks"
-          :key="link.title"
-          v-bind="link"
-        />
-      </q-list>
+            <q-item-section>
+              <span
+                class="text-grey-9 text-h6"
+                style="font-family: 'Bebas Neue'"
+              >
+                REGISTRAR ENTRADA/SALIDA
+              </span>
+            </q-item-section>
+          </q-item>
+          <q-item
+            clickable
+            v-ripple
+            to="/cambiar_clave"
+            active-class="my-menu-link"
+          >
+            <q-item-section avatar>
+              <q-icon name="password" color="grey-9" />
+            </q-item-section>
+
+            <q-item-section>
+              <span
+                class="text-grey-9 text-h6"
+                style="font-family: 'Bebas Neue'"
+              >
+                CAMBIAR CONTRASEÑA
+              </span>
+            </q-item-section>
+          </q-item>
+        </q-list>
+      </q-scroll-area>
+
+      <q-img
+        fit="fill"
+        class="absolute-top q-pa-sm"
+        src="../assets/loxasoluciones.png"
+        style="height: 150px"
+      />
     </q-drawer>
 
     <q-page-container>
@@ -49,9 +103,6 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import EssentialLink, {
-  EssentialLinkProps,
-} from 'components/EssentialLink.vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { LocalStorage } from 'quasar';
@@ -64,51 +115,6 @@ const cerrarSesion = () => {
   router.push('/login');
   LocalStorage.clear();
 };
-
-const essentialLinks: EssentialLinkProps[] = [
-  {
-    title: 'Docs',
-    caption: 'quasar.dev',
-    icon: 'school',
-    link: 'https://quasar.dev',
-  },
-  {
-    title: 'Github',
-    caption: 'github.com/quasarframework',
-    icon: 'code',
-    link: 'https://github.com/quasarframework',
-  },
-  {
-    title: 'Discord Chat Channel',
-    caption: 'chat.quasar.dev',
-    icon: 'chat',
-    link: 'https://chat.quasar.dev',
-  },
-  {
-    title: 'Forum',
-    caption: 'forum.quasar.dev',
-    icon: 'record_voice_over',
-    link: 'https://forum.quasar.dev',
-  },
-  {
-    title: 'Twitter',
-    caption: '@quasarframework',
-    icon: 'rss_feed',
-    link: 'https://twitter.quasar.dev',
-  },
-  {
-    title: 'Facebook',
-    caption: '@QuasarFramework',
-    icon: 'public',
-    link: 'https://facebook.quasar.dev',
-  },
-  {
-    title: 'Quasar Awesome',
-    caption: 'Community Quasar projects',
-    icon: 'favorite',
-    link: 'https://awesome.quasar.dev',
-  },
-];
 
 const leftDrawerOpen = ref(false);
 
