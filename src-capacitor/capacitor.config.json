@@ -7,5 +7,11 @@
   "server": {
     "androidScheme": "https",
     "url": "http://192.168.50.10:9500"
+  },
+  "Camera": {
+    "cameraUsageDescription": "App would like to access the camera."
+  },
+  "BarcodeScanner": {
+    "alwaysShow": true
   }
 }
