@@ -28,7 +28,14 @@
           Último resultado: <b>{{ resultado }}</b>
         </p>
         <div v-if="showCamera">
-          <qrcode-stream :camera="camera" @decode="onDecode"> </qrcode-stream>
+          <BarcodeScanner
+            v-if="$q.platform.is.mobile"
+            ref="barcodeScanner"
+            @scan="onDecode"
+            style="width: 100%; height: 100%"
+          />
+          <qrcode-stream v-else :camera="camera" @decode="onDecode">
+          </qrcode-stream>
         </div>
       </div>
     </div>
@@ -36,25 +43,27 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onDeactivated, onBeforeUnmount, ref } from 'vue';
-import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
 import { QrcodeStream } from 'vue-qrcode-reader';
+import { computed, onDeactivated, onBeforeUnmount, ref, onMounted } from 'vue';
+import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
 
+// Data
 let camera = 'environment';
-const showCamera = ref(false);
 const resultado = ref('');
+const showCamera = ref(false);
 
-// Function to handle the backbutton event
+// Methods
 const onBackButton = () => {
   if (showCamera.value) {
-    stopScan();
+    stopScan(); // Stop the scan (close the camera)
   } else {
-    // Do nothing
   }
 };
 
 // Add an event listener for the backbutton event
-document.addEventListener('backbutton', onBackButton);
+onMounted(() => {
+  document.addEventListener('backbutton', onBackButton);
+});
 
 const textInfo = computed(() => {
   return showCamera.value
