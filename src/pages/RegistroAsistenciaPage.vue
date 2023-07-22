@@ -43,14 +43,17 @@
 </template>
 
 <script setup lang="ts">
+import { useQuasar } from 'quasar';
 import { QrcodeStream } from 'vue-qrcode-reader';
+import { Plugins } from '@capacitor/core';
 import { computed, onDeactivated, onBeforeUnmount, ref, onMounted } from 'vue';
-import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
 
 // Data
-let camera = 'environment';
+const $q = useQuasar();
 const resultado = ref('');
+let camera = 'environment';
 const showCamera = ref(false);
+const { BarcodeScanner } = Plugins;
 
 // Methods
 const onBackButton = () => {
@@ -104,7 +107,6 @@ const startScan = async () => {
     resultado.value = result.content; // this is the decoded string
   }
 };
-
 onDeactivated(() => {
   stopScan();
 });
@@ -113,29 +115,3 @@ onBeforeUnmount(() => {
   stopScan();
 });
 </script>
-
-<style scoped>
-/* .validation-success,
-.validation-failure,
-.validation-pending {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-
-  background-color: rgba(255, 255, 255, .8);
-  text-align: center;
-  font-weight: bold;
-  font-size: 1.4rem;
-  padding: 10px;
-
-  display: flex;
-  flex-flow: column nowrap;
-  justify-content: center;
-}
-.validation-success {
-  color: green;
-}
-.validation-failure {
-  color: red;
-} */
-</style>
