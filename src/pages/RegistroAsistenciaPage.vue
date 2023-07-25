@@ -1,6 +1,12 @@
 <template>
   <q-page>
     <div class="row">
+      <div v-if="resultado !== ''">
+        <p class="text-subtitle1 text-grey-9">
+          Último resultado: <b>{{ resultado }}</b>
+        </p>
+      </div>
+
       <div v-if="!showCamera" class="col-12 text-center q-pt-md">
         <img alt="QR code" src="../assets/logo.jpg" style="width: 340px" />
       </div>
@@ -24,12 +30,14 @@
           />
         </div>
 
-        <p class="text-subtitle1" v-if="resultado">
-          Último resultado: <b>{{ resultado }}</b>
-        </p>
         <div v-if="showCamera">
           <BarcodeScanner
             v-if="$q.platform.is.mobile"
+            :prepare="prepareScan"
+            :hideBackground="hideBackground"
+            :showBackground="showBackground"
+            :startScan="startScan"
+            :stopScan="stopScan"
             ref="barcodeScanner"
             @scan="onDecode"
             style="width: 100%; height: 100%"
@@ -45,17 +53,21 @@
 <script setup lang="ts">
 import { useQuasar } from 'quasar';
 import { QrcodeStream } from 'vue-qrcode-reader';
-import { Plugins } from '@capacitor/core';
+import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
 import { computed, onDeactivated, onBeforeUnmount, ref, onMounted } from 'vue';
+import { ScanResult } from '@capacitor-community/barcode-scanner';
 
 // Data
 const $q = useQuasar();
 const resultado = ref('');
 let camera = 'environment';
 const showCamera = ref(false);
-const { BarcodeScanner } = Plugins;
 
 // Methods
+const prepareScan = async () => {
+  await BarcodeScanner.prepare();
+};
+
 const onBackButton = () => {
   if (showCamera.value) {
     stopScan(); // Stop the scan (close the camera)
@@ -84,29 +96,50 @@ const turnCameraOff = () => {
   showCamera.value = false;
 };
 
-const stopScan = () => {
-  BarcodeScanner.showBackground();
-  BarcodeScanner.stopScan();
-  turnCameraOff();
+const checkPermission = async () => {
+  const status = await BarcodeScanner.checkPermission({ force: true });
+  if (status.granted) {
+    return true;
+  } else if (status.denied) {
+    return false;
+  } else {
+    return false;
+  }
 };
 
-const startScan = async () => {
-  showCamera.value = true;
-  // Check camera permission
-  // This is just a simple example, check out the better checks below
+checkPermission();
+
+const startScan = async (): Promise<void> => {
+  showCamera.value = true; //
   await BarcodeScanner.checkPermission({ force: true });
 
-  // make background of WebView transparent
-  // note: if you are using ionic this might not be enough, check below
   BarcodeScanner.hideBackground();
 
-  const result = await BarcodeScanner.startScan(); // start scanning and wait for a result
+  const result: ScanResult = await BarcodeScanner.startScan(); // start scanning and wait for a result
 
   // if the result has content
   if (result.hasContent) {
+    showCamera.value = false; //
     resultado.value = result.content; // this is the decoded string
   }
 };
+
+const stopScan = async (): Promise<void> => {
+  BarcodeScanner.showBackground();
+  BarcodeScanner.stopScan();
+  turnCameraOff(); //
+};
+
+const hideBackground = () => {
+  BarcodeScanner.hideBackground();
+  return Promise.resolve();
+};
+
+const showBackground = () => {
+  BarcodeScanner.showBackground();
+  return Promise.resolve();
+};
+
 onDeactivated(() => {
   stopScan();
 });
