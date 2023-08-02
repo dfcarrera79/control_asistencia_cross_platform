@@ -1,6 +1,14 @@
 <template>
   <q-page>
     <div class="row">
+      <div>
+        {{ id }}
+        <br />
+        <p>
+          GPS position: <strong>{{ newPos }}</strong>
+        </p>
+      </div>
+
       <div v-if="resultado !== ''">
         <p class="text-subtitle1 text-grey-9">
           Último resultado: <b>{{ resultado }}</b>
@@ -29,43 +37,32 @@
             v-show="!showCamera"
           />
         </div>
-
-        <div v-if="showCamera">
-          <BarcodeScanner
-            v-if="$q.platform.is.mobile"
-            :prepare="prepareScan"
-            :hideBackground="hideBackground"
-            :showBackground="showBackground"
-            :startScan="startScan"
-            :stopScan="stopScan"
-            ref="barcodeScanner"
-            @scan="onDecode"
-            style="width: 100%; height: 100%"
-          />
-          <qrcode-stream v-else :camera="camera" @decode="onDecode">
-          </qrcode-stream>
-        </div>
       </div>
     </div>
   </q-page>
 </template>
 
 <script setup lang="ts">
-import { useQuasar } from 'quasar';
-import { QrcodeStream } from 'vue-qrcode-reader';
-import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
+import { Device } from '@capacitor/device';
+import { DeviceId, LocationData } from '../components/models';
+import { Geolocation } from '@capacitor/geolocation';
+import {
+  BarcodeScanner,
+  ScanResult,
+} from '@capacitor-community/barcode-scanner';
 import { computed, onDeactivated, onBeforeUnmount, ref, onMounted } from 'vue';
-import { ScanResult } from '@capacitor-community/barcode-scanner';
 
 // Data
-const $q = useQuasar();
 const resultado = ref('');
-let camera = 'environment';
 const showCamera = ref(false);
+const id = ref('');
+const newPos: LocationData | null = ref(null);
 
 // Methods
-const prepareScan = async () => {
-  await BarcodeScanner.prepare();
+const printCurrentPosition = async () => {
+  const coordinates = await Geolocation.getCurrentPosition();
+  newPos.value = coordinates;
+  console.log('Current position:', coordinates);
 };
 
 const onBackButton = () => {
@@ -75,9 +72,14 @@ const onBackButton = () => {
   }
 };
 
-// Add an event listener for the backbutton event
-onMounted(() => {
+const logDeviceInfo = async () => {
+  const info: DeviceId = await Device.getId();
+  return info.identifier;
+};
+
+onMounted(async () => {
   document.addEventListener('backbutton', onBackButton);
+  id.value = await logDeviceInfo();
 });
 
 const textInfo = computed(() => {
@@ -85,16 +87,6 @@ const textInfo = computed(() => {
     ? 'posiciona el código QR en el centro de la pantalla'
     : 'Presiona el botón y escanea el código QR';
 });
-
-const onDecode = async (content: string) => {
-  resultado.value = content;
-  turnCameraOff();
-};
-
-const turnCameraOff = () => {
-  camera = 'off';
-  showCamera.value = false;
-};
 
 const checkPermission = async () => {
   const status = await BarcodeScanner.checkPermission({ force: true });
@@ -109,35 +101,35 @@ const checkPermission = async () => {
 
 checkPermission();
 
-const startScan = async (): Promise<void> => {
-  showCamera.value = true; //
-  await BarcodeScanner.checkPermission({ force: true });
+const prepare = () => {
+  BarcodeScanner.prepare();
+};
 
+// Call the prepare method before using the barcode scanner
+prepare();
+
+const startScan = async () => {
+  // Check camera permission
+  await printCurrentPosition();
+  showCamera.value = true;
+
+  await BarcodeScanner.checkPermission({ force: true });
+  // make background of WebView transparent
+  // note: if you are using ionic this might not be enough, check below
   BarcodeScanner.hideBackground();
 
   const result: ScanResult = await BarcodeScanner.startScan(); // start scanning and wait for a result
 
   // if the result has content
   if (result.hasContent) {
-    showCamera.value = false; //
+    showCamera.value = false;
     resultado.value = result.content; // this is the decoded string
   }
 };
 
-const stopScan = async (): Promise<void> => {
+const stopScan = () => {
   BarcodeScanner.showBackground();
   BarcodeScanner.stopScan();
-  turnCameraOff(); //
-};
-
-const hideBackground = () => {
-  BarcodeScanner.hideBackground();
-  return Promise.resolve();
-};
-
-const showBackground = () => {
-  BarcodeScanner.showBackground();
-  return Promise.resolve();
 };
 
 onDeactivated(() => {

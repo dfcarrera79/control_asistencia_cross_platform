@@ -1,9 +1,11 @@
 <template>
-  <q-page class="flex flex-center bg-blue-grey-1">
+  <q-page class="flex flex-center bg-image">
     <q-dialog v-model="mostrarVentana" persistent>
       <q-card>
-        <div class="row bg-blue-grey-8 justify-center q-pa-xs">
-          <span class="text-subtitle2 text-center text-white"
+        <div class="row bg-blue-8 justify-center q-pa-xs">
+          <span
+            class="text-h6 text-center text-white"
+            style="font-family: 'Bebas Neue'"
             >Cambiar clave de acceso</span
           >
         </div>
@@ -37,9 +39,11 @@
     </q-dialog>
 
     <q-card class="shadow-8 bg-white" style="width: 300px; height: 260px">
-      <div class="row bg-blue-grey-8 justify-center q-pa-xs">
-        <span class="text-subtitle2 text-center text-white"
-          >PORTAL DE CONTROL DE ASISTENCIA V0.1</span
+      <div class="row bg-blue-8 justify-center q-pa-xs">
+        <span
+          class="text-h6 text-center text-white"
+          style="font-family: 'Bebas Neue'"
+          >CONTROL DE ASISTENCIA APP V0.1</span
         >
       </div>
       <div class="row">
@@ -88,7 +92,7 @@
             "
             @click="recuperarContraseña()"
           >
-            <span class="hover-primary text-bold"
+            <span class="text-bold text-blue-grey"
               >¿OLVIDASTE TU CONTRASEÑA?</span
             >
           </a>
@@ -217,5 +221,10 @@ const enviarCorreoRecuperacion = async () => {
 <style>
 .hover-primary:hover {
   color: #1976d2;
+}
+.bg-image {
+  background-image: url('../assets/background.jpg');
+  background-repeat: repeat;
+  background-size: cover;
 }
 </style>

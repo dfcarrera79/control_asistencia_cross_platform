@@ -19,7 +19,7 @@
         </q-toolbar-title>
 
         <div class="row items-center content-center q-mr-md">
-          <q-btn dense flat @click="cerrarSesion">
+          <q-btn dense flat round @click="cerrarSesion">
             <div class="q-mr-sm" v-if="!($q.screen.lt.md || $q.screen.lt.sm)">
               Salir
             </div>
@@ -53,7 +53,7 @@
             active-class="my-menu-link"
           >
             <q-item-section avatar>
-              <q-icon name="password" color="grey-9" />
+              <q-icon name="timer" color="grey-9" />
             </q-item-section>
 
             <q-item-section>
@@ -65,6 +65,7 @@
               </span>
             </q-item-section>
           </q-item>
+
           <q-item
             clickable
             v-ripple

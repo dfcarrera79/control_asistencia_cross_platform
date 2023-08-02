@@ -11,6 +11,8 @@
     "@capacitor/camera": "^5.0.6",
     "@capacitor/cli": "^5.0.0",
     "@capacitor/core": "^5.2.2",
+    "@capacitor/device": "^5.0.6",
+    "@capacitor/geolocation": "^5.0.6",
     "@capacitor/splash-screen": "^5.0.6",
     "vue-qrcode-reader": "^5.1.0"
   }

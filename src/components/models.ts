@@ -18,3 +18,20 @@ export interface Respuesta {
   mensaje: string;
   objetos: number;
 }
+
+export interface DeviceId {
+  identifier: string;
+}
+
+export interface LocationData {
+  coords: {
+    latitude: number;
+    longitude: number;
+    accuracy: number;
+    altitudeAccuracy: number | null;
+    altitude: number | null;
+    speed: number | null;
+    heading: number | null;
+  };
+  timestamp: number;
+}

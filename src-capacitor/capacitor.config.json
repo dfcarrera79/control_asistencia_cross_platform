@@ -13,5 +13,9 @@
   },
   "BarcodeScanner": {
     "alwaysShow": true
-  }
+  },
+  "plugins": [
+    "cordova-plugin-camera",
+    "@capacitor-community/barcode-scanner"
+  ]
 }
