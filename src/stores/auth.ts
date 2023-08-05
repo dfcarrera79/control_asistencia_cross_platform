@@ -31,6 +31,8 @@ export const useAuthStore = defineStore('counter', {
         estaLogeado: this.estaLogeado,
         currentURL: this.url,
         token: this.token,
+        ruc: this.ruc,
+        usuario: this.usuario,
       });
     },
   },

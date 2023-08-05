@@ -107,6 +107,7 @@ import { ref, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { useAxios } from '../services/useAxios';
+import { Session } from '../components/models';
 import { useMensajes } from '../services/useMensajes';
 import { LocalStorage, Loading, QSpinnerFacebook } from 'quasar';
 
@@ -115,7 +116,7 @@ const authStore = useAuthStore();
 const { get, put } = useAxios();
 const { mostrarMensaje } = useMensajes();
 const url = ref(authStore.url);
-const newUrl = ref(url.value.slice(url.value.indexOf('#') + 1));
+// const newUrl = ref(url.value.slice(url.value.indexOf('#') + 1));
 const mostrarVentana = ref(false);
 const correoElectronico = ref('');
 const ruc = ref('');
@@ -136,12 +137,8 @@ const emailRule: ((v: string) => string | boolean)[] = [
 ];
 
 onMounted(() => {
-  const session = LocalStorage.getItem('session');
-
-  if (session) {
-    authStore.iniciarSesion(session.token);
-    router.push(newUrl.value);
-  }
+  const session: Session | null = LocalStorage.getItem('session');
+  id.value = session?.ruc || '';
 });
 
 const logearse = async () => {

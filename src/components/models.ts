@@ -35,3 +35,17 @@ export interface LocationData {
   };
   timestamp: number;
 }
+
+export interface Location {
+  latitude: number;
+  longitude: number;
+  timestamp: number;
+}
+
+export interface Session {
+  estaLogeado: boolean;
+  currentURL: string;
+  token: string | null;
+  ruc: string;
+  usuario: string;
+}

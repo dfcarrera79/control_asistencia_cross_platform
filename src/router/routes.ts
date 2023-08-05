@@ -34,6 +34,16 @@ const routes: RouteRecordRaw[] = [
     ],
   },
   {
+    path: '/registro_dispositivo',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        component: () => import('pages/RegistrarDispositivoPage.vue'),
+      },
+    ],
+  },
+  {
     path: '/registro_asistencia',
     component: () => import('layouts/MainLayout.vue'),
     children: [

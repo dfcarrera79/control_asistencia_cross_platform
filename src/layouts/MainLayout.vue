@@ -49,6 +49,26 @@
           <q-item
             clickable
             v-ripple
+            to="/registro_dispositivo"
+            active-class="my-menu-link"
+          >
+            <q-item-section avatar>
+              <q-icon name="perm_device_information" color="grey-9" />
+            </q-item-section>
+
+            <q-item-section>
+              <span
+                class="text-grey-9 text-h6"
+                style="font-family: 'Bebas Neue'"
+              >
+                REGISTRAR DISPOSITIVO
+              </span>
+            </q-item-section>
+          </q-item>
+
+          <q-item
+            clickable
+            v-ripple
             to="/registro_asistencia"
             active-class="my-menu-link"
           >
