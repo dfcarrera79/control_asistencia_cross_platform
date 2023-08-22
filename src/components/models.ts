@@ -48,4 +48,24 @@ export interface Session {
   token: string | null;
   ruc: string;
   usuario: string;
+  codigo: number;
+  login: string;
+  clave: string;
+}
+
+export interface RespuestaCoordenadas {
+  error: string;
+  mensaje: string;
+  objetos: ObjetoCoordenadas[];
+}
+
+interface ObjetoCoordenadas {
+  codigo: number;
+  lat: number;
+  long: number;
+}
+
+export interface Resultado {
+  alm_nomcom: string;
+  alm_codigo: number;
 }

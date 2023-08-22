@@ -13,4 +13,7 @@ interface Coords {
   heading: number;
 }
 
-
+{
+	"alm_nomcom": "BODEGA DE VENCIMIENTOS FAM LOJA",
+	"alm_codigo": 11
+}

@@ -113,22 +113,21 @@ import { LocalStorage, Loading, QSpinnerFacebook } from 'quasar';
 
 const router = useRouter();
 const authStore = useAuthStore();
+const url = ref(authStore.url);
 const { get, put } = useAxios();
 const { mostrarMensaje } = useMensajes();
-const url = ref(authStore.url);
-// const newUrl = ref(url.value.slice(url.value.indexOf('#') + 1));
 const mostrarVentana = ref(false);
 const correoElectronico = ref('');
 const ruc = ref('');
 const id = ref('');
 const clave = ref('');
 const isPwd = ref(true);
-
+const newUrl = ref(url.value.slice(url.value.indexOf('#') + 1));
 const rucRule: ((v: string) => string | boolean)[] = [
   (v: string) => !!v || 'El RUC es obligatorio',
   (v: string) => /^\d{13}$/.test(v) || 'El RUC debe contener 13 dígitos',
 ];
-
+const token = ref('');
 const emailRule: ((v: string) => string | boolean)[] = [
   (v: string) => !!v || 'El correo electrónico es obligatorio',
   (v: string) =>
@@ -136,16 +135,27 @@ const emailRule: ((v: string) => string | boolean)[] = [
     'Formato de correo electrónico inválido',
 ];
 
+const codigo = ref(0);
+const usuario = ref('');
+
 onMounted(() => {
   const session: Session | null = LocalStorage.getItem('session');
-  id.value = session?.ruc || '';
+  id.value = session?.login || '';
+  usuario.value = session?.usuario || '';
+  codigo.value = session?.codigo || 0;
+  token.value = session?.token || '';
+
+  if (session) {
+    authStore.iniciarSesion(token.value, codigo.value, usuario.value, id.value);
+    router.push(newUrl.value);
+  }
 });
 
 const logearse = async () => {
   if (id.value.trim().length === 0) {
     mostrarMensaje(
       'Error',
-      'Es necesario ingresar su número de RUC o identificación'
+      'Es necesario ingresar su nombre de usuario para continuar'
     );
     return;
   }
@@ -161,15 +171,24 @@ const logearse = async () => {
     id: id.value,
     clave: clave.value,
   });
+
   const objetos = respuesta.objetos[0];
-  authStore.usuario = objetos.razon_social;
-  authStore.ruc = objetos.ruc_cliente;
+  authStore.actualizarDatos(
+    objetos.usu_nomape,
+    objetos.codigo,
+    objetos.usu_login
+  );
   Loading.hide();
   if (respuesta.error === 'S') {
     mostrarMensaje('Error', respuesta.mensaje);
     return;
   }
-  authStore.iniciarSesion(respuesta.token);
+  authStore.iniciarSesion(
+    respuesta.token,
+    objetos.codigo,
+    objetos.usu_nomape,
+    objetos.usu_login
+  );
   router.push('/');
 };
 

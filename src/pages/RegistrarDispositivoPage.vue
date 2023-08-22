@@ -19,6 +19,7 @@
   </div>
 </template>
 <script setup lang="ts">
+import { useQuasar } from 'quasar';
 import { Device } from '@capacitor/device';
 import { useAuthStore } from '../stores/auth';
 import { computed, onMounted, ref } from 'vue';
@@ -27,13 +28,10 @@ import { useAxios } from '../services/useAxios';
 
 // Data
 const id = ref('');
-const check = ref(false);
-const { get, put } = useAxios();
-const authStore = useAuthStore();
-import { useQuasar } from 'quasar';
-
-// Data
 const $q = useQuasar();
+const check = ref(false);
+const { get, post } = useAxios();
+const authStore = useAuthStore();
 
 // Methods
 const logDeviceInfo = async () => {
@@ -56,7 +54,7 @@ onMounted(async () => {
 
 const registrarDispositivo = async () => {
   try {
-    const response = await put(
+    const response = await post(
       '/registrar_dispositivo',
       {},
       JSON.parse(

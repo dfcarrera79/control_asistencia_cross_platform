@@ -42,10 +42,28 @@
             <q-separator inset />
             <div style="color: #636466" class="text-center">Bienvenido</div>
             <div class="text-weight-bold text-center" style="color: #636466">
-              {{ appStore.usuario }}
+              {{ usuario }}
             </div>
             <q-separator inset />
           </q-item>
+
+          <q-item clickable v-ripple to="/" active-class="my-menu-link">
+            <q-item-section avatar>
+              <q-icon name="home" color="grey-9" />
+            </q-item-section>
+
+            <q-item-section>
+              <span
+                class="text-grey-9 text-h6"
+                style="font-family: 'Bebas Neue'"
+              >
+                PÁGINA DE INICIO
+              </span>
+            </q-item-section>
+          </q-item>
+
+          <q-separator />
+
           <q-item
             clickable
             v-ripple
@@ -73,7 +91,10 @@
             active-class="my-menu-link"
           >
             <q-item-section avatar>
-              <q-icon name="timer" color="grey-9" />
+              <div class="row">
+                <q-icon size="1.5em" name="arrow_right" color="grey-9" />
+                <q-icon size="1.5em" name="timer" color="grey-9" />
+              </div>
             </q-item-section>
 
             <q-item-section>
@@ -81,7 +102,30 @@
                 class="text-grey-9 text-h6"
                 style="font-family: 'Bebas Neue'"
               >
-                REGISTRAR ENTRADA/SALIDA
+                REGISTRAR ENTRADA
+              </span>
+            </q-item-section>
+          </q-item>
+
+          <q-item
+            clickable
+            v-ripple
+            to="/registro_salida"
+            active-class="my-menu-link"
+          >
+            <q-item-section avatar>
+              <div class="row">
+                <q-icon size="1.5em" name="arrow_left" color="grey-9" />
+                <q-icon size="1.5em" name="timer" color="grey-9" />
+              </div>
+            </q-item-section>
+
+            <q-item-section>
+              <span
+                class="text-grey-9 text-h6"
+                style="font-family: 'Bebas Neue'"
+              >
+                REGISTRAR SALIDA
               </span>
             </q-item-section>
           </q-item>
@@ -123,16 +167,26 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { LocalStorage } from 'quasar';
+import { Session } from '../components/models';
 
 const router = useRouter();
-const appStore = useAuthStore();
+const authStore = useAuthStore();
+const usuario = ref('');
+
+// Methods
+onMounted(() => {
+  const session: Session | null = LocalStorage.getItem('session');
+  usuario.value = session?.usuario || '';
+});
+
+const sessionData = LocalStorage.getItem('session');
 
 const cerrarSesion = () => {
-  appStore.estaLogeado = false;
+  authStore.estaLogeado = false;
   router.push('/login');
   LocalStorage.clear();
 };

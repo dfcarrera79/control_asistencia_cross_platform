@@ -5,8 +5,9 @@
       class="row text-uppercase text-grey-8 justify-center items-center content-center q-pa-md text-center"
       style="font-family: 'Bebas Neue'"
     >
-      <div>Registrar Entrada</div>
+      <div>Registrar Salida</div>
     </h4>
+
     <div class="row">
       <div v-if="!showCamera" class="col-12 text-center q-pt-md">
         <img alt="QR code" src="../assets/logo.jpg" style="width: 340px" />
@@ -47,10 +48,10 @@
 </template>
 
 <script setup lang="ts">
+import { LocalStorage, useQuasar } from 'quasar';
 import { Device } from '@capacitor/device';
 import { DeviceId } from '../components/models';
 import { useAxios } from '../services/useAxios';
-import { LocalStorage, useQuasar } from 'quasar';
 import { Geolocation } from '@capacitor/geolocation';
 import {
   BarcodeScanner,
@@ -58,12 +59,12 @@ import {
 } from '@capacitor-community/barcode-scanner';
 import { computed, onDeactivated, onBeforeUnmount, ref, onMounted } from 'vue';
 import { RespuestaCoordenadas, Session } from '../components/models';
-// import { useAuthStore } from '../stores/auth';
+import { useAuthStore } from '../stores/auth';
 
 // Data
 const resultado = ref('');
-const { get, post } = useAxios();
-// const authStore = useAuthStore();
+const { get, put } = useAxios();
+const authStore = useAuthStore();
 const showCamera = ref(false);
 const id = ref('');
 const newPos = ref({
@@ -82,10 +83,10 @@ onMounted(() => {
   codigo.value = session?.codigo || 0;
 });
 
-const registrarEntrada = async (employee_id: number) => {
+const registrarSalida = async (employee_id: number) => {
   try {
-    const response = await post(
-      '/registrar_entrada',
+    const response = await put(
+      '/registrar_salida',
       {},
       JSON.parse(
         JSON.stringify({
@@ -95,8 +96,7 @@ const registrarEntrada = async (employee_id: number) => {
     );
 
     if (response.error === 'N') {
-      // check.value = true;
-      text.value = "Registro de entrada: '" + currentTime + "'";
+      text.value = "Registro de salida: '" + currentTime + "'";
     }
     // Handle the response accordingly
     $q.notify({
@@ -212,7 +212,7 @@ const startScan = async () => {
     );
 
     if (distance.value <= maxDistance) {
-      await registrarEntrada(codigo.value);
+      await registrarSalida(codigo.value);
     }
   }
 
