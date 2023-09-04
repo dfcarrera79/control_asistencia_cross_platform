@@ -56,6 +56,7 @@
             dense
             :type="isPwd ? 'password' : 'text'"
             label="Clave de acceso"
+            @keyup.enter="logearse()"
           >
             <template v-slot:append>
               <q-icon

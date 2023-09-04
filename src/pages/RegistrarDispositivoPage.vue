@@ -59,7 +59,7 @@ const registrarDispositivo = async () => {
       {},
       JSON.parse(
         JSON.stringify({
-          ruc: authStore.ruc,
+          usuario_codigo: authStore.codigo,
           id_dispositivo: id.value,
         })
       )

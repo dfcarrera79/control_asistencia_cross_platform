@@ -1,5 +1,20 @@
 <template>
   <q-page>
+    <div class="sample-background">
+      <!-- this background simulates the camera view -->
+    </div>
+    <div v-if="showCamera" class="container">
+      <div class="barcode-scanner--area--container">
+        <div class="relative">
+          <p>Apunta tu cámara al código QR</p>
+        </div>
+        <div class="square surround-cover">
+          <div class="barcode-scanner--area--outer surround-cover">
+            <div class="barcode-scanner--area--inner"></div>
+          </div>
+        </div>
+      </div>
+    </div>
     <h4
       v-if="!showCamera"
       class="row text-uppercase text-grey-8 justify-center items-center content-center q-pa-md text-center"
@@ -57,14 +72,14 @@ import {
   BarcodeScanner,
   ScanResult,
 } from '@capacitor-community/barcode-scanner';
+import { useMensajes } from '../services/useMensajes';
 import { computed, onDeactivated, onBeforeUnmount, ref, onMounted } from 'vue';
 import { RespuestaCoordenadas, Session } from '../components/models';
-import { useAuthStore } from '../stores/auth';
 
 // Data
 const resultado = ref('');
 const { get, put } = useAxios();
-const authStore = useAuthStore();
+const { mostrarMensaje } = useMensajes();
 const showCamera = ref(false);
 const id = ref('');
 const newPos = ref({
@@ -76,12 +91,26 @@ const $q = useQuasar();
 const text = ref('');
 let currentTime = new Date().toLocaleTimeString();
 const codigo = ref(0);
+const check = ref(false);
 
 // Methods
 onMounted(() => {
   const session: Session | null = LocalStorage.getItem('session');
   codigo.value = session?.codigo || 0;
 });
+
+const verificarDispositivo = async () => {
+  id.value = await logDeviceInfo();
+  const respuesta = await get('/validar_dispositivo', {
+    id: id.value,
+  });
+  if (respuesta.error === 'N') {
+    check.value = true;
+  } else {
+    console.error(respuesta.mensaje);
+    check.value = false;
+  }
+};
 
 const registrarSalida = async (employee_id: number) => {
   try {
@@ -182,6 +211,7 @@ const prepare = () => {
 prepare();
 
 const startScan = async () => {
+  verificarDispositivo();
   // Check camera permission
   const hasCameraPermission = await checkPermission();
   if (!hasCameraPermission) {
@@ -212,19 +242,23 @@ const startScan = async () => {
     );
 
     if (distance.value <= maxDistance) {
-      await registrarSalida(codigo.value);
+      if (check.value === true) {
+        await registrarSalida(codigo.value);
+      } else {
+        mostrarMensaje('Error', 'El dispositivo no está registrado.');
+      }
     }
-  }
 
-  $q.notify({
-    color: distance.value <= maxDistance ? 'green-4' : 'red-5',
-    textColor: 'white',
-    icon: distance.value <= maxDistance ? 'cloud_done' : 'warning',
-    message:
-      distance.value <= maxDistance
-        ? 'El dispositivo está dentro del rango especificado.'
-        : 'El dispositivo está fuera del rango especificado.',
-  });
+    $q.notify({
+      color: distance.value <= maxDistance ? 'green-4' : 'red-5',
+      textColor: 'white',
+      icon: distance.value <= maxDistance ? 'cloud_done' : 'warning',
+      message:
+        distance.value <= maxDistance
+          ? 'El dispositivo está dentro del rango especificado.'
+          : 'El dispositivo está fuera del rango especificado.',
+    });
+  }
 };
 
 const stopScan = () => {
@@ -288,3 +322,105 @@ const obtenerCoordenadas = async (nombre: string) => {
   }
 };
 </script>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+p {
+  color: #fff;
+  font-family: sans-serif;
+  text-align: center;
+  font-weight: 600;
+}
+html,
+body,
+.container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.container {
+  display: flex;
+}
+.relative {
+  position: relative;
+  z-index: 1;
+}
+.square {
+  height: 50%;
+  width: 50%; /* Change this value to make the square smaller */
+  margin-top: 150px;
+  margin-left: 70px;
+  position: relative;
+  overflow: hidden;
+  transition: 0.3s;
+}
+.square:after {
+  content: '';
+  top: 0;
+  display: block;
+  padding-bottom: 100%;
+}
+.square > div {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+}
+.surround-cover {
+  box-shadow: 0 0 0 99999px rgba(0, 0, 0, 0.5);
+}
+.barcode-scanner--area--container {
+  width: 80%;
+  max-width: min(500px, 80vh);
+  margin: auto;
+}
+.barcode-scanner--area--outer {
+  display: flex;
+  border-radius: 1em;
+}
+.barcode-scanner--area--inner {
+  width: 100%;
+  margin: 1rem;
+  border: 2px solid #fff;
+  box-shadow: 0px 0px 2px 1px rgb(0 0 0 / 0.5),
+    inset 0px 0px 2px 1px rgb(0 0 0 / 0.5);
+  border-radius: 1rem;
+}
+
+.sample-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(45deg, #673ab7, transparent);
+  background: url(./mockup.jpg);
+  background-position: 45% 50%;
+  background-size: cover;
+  background-repeat: no-repeat;
+  animation: shake 5s infinite;
+}
+@keyframes shake {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+  }
+  20% {
+    transform: translate(5px, 5px) rotate(-1deg) scale(1.05);
+  }
+  40% {
+    transform: translate(5px, 5px) rotate(-2deg) scale(1.07);
+  }
+  60% {
+    transform: translate(2px, 2px) rotate(0deg) scale(1.04);
+  }
+  80% {
+    transform: translate(-1px, -1px) rotate(-2deg) scale(1.05);
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+  }
+}
+</style>
