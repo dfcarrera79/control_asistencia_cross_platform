@@ -35,7 +35,7 @@
             {{ textInfo }}
           </span>
         </div>
-        <div>
+        <div v-if="!registrado">
           <q-btn
             color="primary"
             rounded
@@ -48,50 +48,56 @@
         </div>
       </div>
     </div>
-    <div v-if="resultado !== ''">
-      <p><strong>Device ID: </strong> {{ id }}</p>
-      <p><strong>GPS position: </strong> {{ newPos }}</p>
-      <p class="text-subtitle1 text-grey-9">
-        <strong>Último resultado: </strong> <b>{{ resultado }}</b>
-      </p>
-      <p>{{ targetLatitude }}</p>
-      <p>{{ targetLongitude }}</p>
-      <p>{{ distance }}</p>
-      <p>{{ text }}</p>
+    <div
+      class="q-pa-md row justify-center items-start q-gutter-md"
+      v-if="registrado"
+    >
+      <q-card
+        class="my-card text-white"
+        style="background: radial-gradient(circle, #35a2ff 0%, #014a88 100%)"
+      >
+        <q-card-section class="q-pa-md">
+          <strong>Hora de salida: </strong> {{ hora }}
+          <br />
+          <strong>Lugar de trabajo: </strong> {{ resultado }}
+        </q-card-section>
+      </q-card>
     </div>
   </q-page>
 </template>
 
 <script setup lang="ts">
-import { LocalStorage, useQuasar } from 'quasar';
 import { Device } from '@capacitor/device';
 import { DeviceId } from '../components/models';
 import { useAxios } from '../services/useAxios';
+import { LocalStorage, useQuasar } from 'quasar';
 import { Geolocation } from '@capacitor/geolocation';
+import { useMensajes } from '../services/useMensajes';
+import { RespuestaCoordenadas, Session } from '../components/models';
+import { computed, onDeactivated, onBeforeUnmount, ref, onMounted } from 'vue';
 import {
   BarcodeScanner,
   ScanResult,
 } from '@capacitor-community/barcode-scanner';
-import { useMensajes } from '../services/useMensajes';
-import { computed, onDeactivated, onBeforeUnmount, ref, onMounted } from 'vue';
-import { RespuestaCoordenadas, Session } from '../components/models';
 
 // Data
+const id = ref('');
+const hora = ref('');
+const text = ref('');
+const codigo = ref(0);
+const $q = useQuasar();
+const check = ref(false);
 const resultado = ref('');
+const registrado = ref(false);
+const showCamera = ref(false);
 const { get, put } = useAxios();
 const { mostrarMensaje } = useMensajes();
-const showCamera = ref(false);
-const id = ref('');
+let currentTime = new Date().toLocaleTimeString();
 const newPos = ref({
   latitude: 0,
   longitude: 0,
   timestamp: 0,
 });
-const $q = useQuasar();
-const text = ref('');
-let currentTime = new Date().toLocaleTimeString();
-const codigo = ref(0);
-const check = ref(false);
 
 // Methods
 onMounted(() => {
@@ -244,6 +250,8 @@ const startScan = async () => {
     if (distance.value <= maxDistance) {
       if (check.value === true) {
         await registrarSalida(codigo.value);
+        hora.value = new Date().toLocaleTimeString();
+        registrado.value = true;
       } else {
         mostrarMensaje('Error', 'El dispositivo no está registrado.');
       }

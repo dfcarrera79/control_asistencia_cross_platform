@@ -62,8 +62,6 @@
             </q-item-section>
           </q-item>
 
-          <q-separator />
-
           <q-item
             clickable
             v-ripple
@@ -182,8 +180,6 @@ onMounted(() => {
   const session: Session | null = LocalStorage.getItem('session');
   usuario.value = session?.usuario || '';
 });
-
-const sessionData = LocalStorage.getItem('session');
 
 const cerrarSesion = () => {
   authStore.estaLogeado = false;

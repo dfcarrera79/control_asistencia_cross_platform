@@ -205,10 +205,8 @@ async function fetchEmail() {
 
     // Assuming the response data has a property 'email' containing the email address
     correoElectronico.value = respuesta.objetos;
-    console.log('Is running');
   } catch (error) {
     console.error('Error fetching email:', error);
-    console.log('Is not running');
   }
 }
 
