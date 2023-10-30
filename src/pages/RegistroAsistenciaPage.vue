@@ -15,7 +15,6 @@
         </div>
       </div>
     </div>
-
     <h4
       v-if="!showCamera"
       class="row text-uppercase text-grey-8 justify-center items-center content-center q-pa-md text-center"
@@ -31,7 +30,7 @@
     <div class="row justify-center q-pt-lg">
       <div class="col text-center">
         <div>
-          <span class="text-subtitle2 text-grey-9">
+          <span class="text-subtitle2 text-grey-9" v-if="!registrado">
             {{ textInfo }}
           </span>
         </div>
@@ -72,7 +71,7 @@ import { useAxios } from '../services/useAxios';
 import { DeviceId } from '../components/models';
 import { LocalStorage, useQuasar } from 'quasar';
 import { Geolocation } from '@capacitor/geolocation';
-import { useMensajes } from '../services/useMensajes';
+import { obtenerDistancia } from '../utils/AppUtils';
 import { RespuestaCoordenadas, Session } from '../components/models';
 import { computed, onDeactivated, onBeforeUnmount, ref, onMounted } from 'vue';
 import {
@@ -87,11 +86,11 @@ const text = ref('');
 const codigo = ref(0);
 const $q = useQuasar();
 const check = ref(false);
+const checkRegistro = ref(false);
 const resultado = ref('');
 const registrado = ref(false);
 const showCamera = ref(false);
 const { get, post } = useAxios();
-const { mostrarMensaje } = useMensajes();
 let currentTime = new Date().toLocaleTimeString();
 const newPos = ref({
   latitude: 0,
@@ -118,7 +117,7 @@ const registrarEntrada = async (employee_id: number) => {
     );
 
     if (response.error === 'N') {
-      // check.value = true;
+      checkRegistro.value = true;
       text.value = "Registro de entrada: '" + currentTime + "'";
     }
     // Handle the response accordingly
@@ -152,8 +151,6 @@ const printCurrentPosition = async () => {
       message: '¡Debe chequear los permisos de gps en las configuraciones!',
     });
   }
-
-  // Get the current position
 };
 
 const onBackButton = () => {
@@ -250,10 +247,12 @@ const startScan = async () => {
 
     if (distance.value <= maxDistance && check.value === true) {
       await registrarEntrada(codigo.value);
-      hora.value = new Date().toLocaleTimeString();
-      registrado.value = true;
+      if (checkRegistro.value == true) {
+        hora.value = new Date().toLocaleTimeString();
+        registrado.value = true;
+      }
     } else {
-      mostrarMensaje('Error', 'El dispositivo no está registrado.');
+      registrado.value = false;
     }
 
     $q.notify({
@@ -280,33 +279,6 @@ onDeactivated(() => {
 onBeforeUnmount(() => {
   stopScan();
 });
-
-const obtenerDistancia = (
-  lat1: number,
-  lon1: number,
-  lat2: number,
-  lon2: number
-) => {
-  const earthRadius = 6371000; // Earth's radius in meters
-
-  const toRadians = (degrees: number) => degrees * (Math.PI / 180);
-
-  const deltaLat = toRadians(lat2 - lat1);
-  const deltaLon = toRadians(lon2 - lon1);
-
-  const haversineA =
-    Math.sin(deltaLat / 2) ** 2 +
-    Math.cos(toRadians(lat1)) *
-      Math.cos(toRadians(lat2)) *
-      Math.sin(deltaLon / 2) ** 2;
-
-  const haversineC =
-    2 * Math.atan2(Math.sqrt(haversineA), Math.sqrt(1 - haversineA));
-
-  const distance = earthRadius * haversineC;
-
-  return distance;
-};
 
 const targetLatitude = ref(0);
 const targetLongitude = ref(0);
