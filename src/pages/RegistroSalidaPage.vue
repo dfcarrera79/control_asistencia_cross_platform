@@ -112,7 +112,12 @@ const verificarDispositivo = async () => {
   if (respuesta.error === 'N') {
     check.value = true;
   } else {
-    console.error(respuesta.mensaje);
+    $q.notify({
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'warning',
+      message: '¡No se encuentra el dispositivo registrado en el sistema!',
+    });
     check.value = false;
   }
 };
