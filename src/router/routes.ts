@@ -34,6 +34,16 @@ const routes: RouteRecordRaw[] = [
     ],
   },
   {
+    path: '/permisos',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        component: () => import('pages/PermisosPage.vue'),
+      },
+    ],
+  },
+  {
     path: '/registro_dispositivo',
     component: () => import('layouts/MainLayout.vue'),
     children: [

@@ -62,6 +62,21 @@
             </q-item-section>
           </q-item>
 
+          <q-item clickable v-ripple to="/permisos" active-class="my-menu-link">
+            <q-item-section avatar>
+              <q-icon name="check_box" color="grey-9" />
+            </q-item-section>
+
+            <q-item-section>
+              <span
+                class="text-grey-9 text-h6"
+                style="font-family: 'Bebas Neue'"
+              >
+                PERMISOS
+              </span>
+            </q-item-section>
+          </q-item>
+
           <q-item
             clickable
             v-ripple
