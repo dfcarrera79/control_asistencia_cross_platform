@@ -47,6 +47,26 @@
         </div>
       </div>
     </div>
+    <!-- <div class="row justify-center q-pt-lg">
+      <div class="col text-center">
+        <div>
+          <span class="text-subtitle2 text-grey-9" v-if="!registrado">
+            {{ textInfo }}
+          </span>
+        </div>
+        <div v-if="!registrado">
+          <q-btn
+            color="primary"
+            rounded
+            icon="camera_alt"
+            label="Tomar selfie"
+            size="lg"
+            @click="takeSelfie"
+            v-show="!showCamera"
+          />
+        </div>
+      </div>
+    </div> -->
     <div
       class="q-pa-md row justify-center items-start q-gutter-md"
       v-if="registrado"
@@ -62,14 +82,27 @@
         </q-card-section>
       </q-card>
     </div>
+    <div v-if="registrado" class="col-12 text-center q-pt-md">
+      <img :src="foto" alt="Foto tomada" style="width: 340px" />
+    </div>
+    <!-- <div class="col-12 text-center q-pt-md">
+      <img :src="foto" alt="Foto tomada" style="width: 340px" />
+    </div> -->
   </q-page>
 </template>
 
 <script setup lang="ts">
+import {
+  Camera,
+  CameraResultType,
+  CameraSource,
+  CameraDirection,
+} from '@capacitor/camera';
 import { Device } from '@capacitor/device';
 import { useAxios } from '../services/useAxios';
 import { DeviceId } from '../components/models';
 import { LocalStorage, useQuasar } from 'quasar';
+import { Filesystem } from '@capacitor/filesystem';
 import { Geolocation } from '@capacitor/geolocation';
 import { obtenerDistancia } from '../utils/AppUtils';
 import { RespuestaCoordenadas, Session } from '../components/models';
@@ -81,6 +114,7 @@ import {
 
 // Data
 const id = ref('');
+const foto = ref();
 const hora = ref('');
 const text = ref('');
 const codigo = ref(0);
@@ -104,6 +138,47 @@ onMounted(() => {
   codigo.value = session?.codigo || 0;
 });
 
+// const subirFoto = async (file: File) => {
+//   try {
+//     const formData = new FormData();
+//     formData.append('file', file);
+//     const respt = await post('/subir_foto', {}, formData);
+//     return respt.files.file.filepath;
+//   } catch (error) {
+//     console.error('[ERROR AL SUBIR LA FOTO]:', error);
+//   }
+// };
+
+const takeSelfie = async () => {
+  try {
+    const image = await Camera.getPhoto({
+      quality: 90,
+      allowEditing: false,
+      resultType: CameraResultType.Uri,
+      source: CameraSource.Camera,
+      direction: CameraDirection.Front,
+      width: 1024,
+      height: 768,
+    });
+
+    if (image.webPath) {
+      // result.webPath contiene la URL de la imagen tomada
+      foto.value = image.webPath;
+
+      // const respt = await fetch(image.webPath);
+
+      // if (respt.ok) {
+      //   const data = await respt.blob();
+      //   const file = new File([data], 'foto.jpg');
+
+      //   subirFoto(file);
+      // }
+    }
+  } catch (error) {
+    console.error('[ERROR AL TOMAR LA SELFIE] :', error);
+  }
+};
+
 const registrarEntrada = async (employee_id: number) => {
   try {
     const response = await post(
@@ -119,6 +194,7 @@ const registrarEntrada = async (employee_id: number) => {
     if (response.error === 'N') {
       checkRegistro.value = true;
       text.value = "Registro de entrada: '" + currentTime + "'";
+      takeSelfie();
     }
     // Handle the response accordingly
     $q.notify({

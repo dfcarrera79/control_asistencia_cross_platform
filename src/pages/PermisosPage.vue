@@ -7,7 +7,7 @@
   </h4>
 
   <div class="q-pa-md text-subtitle1 text-grey-8">
-    <p><strong>Permitido</strong></p>
+    <strong>Permitido</strong>
     <div class="row items-center" v-if="cameraPermission">
       <div>
         <q-icon color="primary" name="photo_camera" />
@@ -25,7 +25,7 @@
 
   <br />
   <div class="q-pa-md text-subtitle1 text-grey-8">
-    <p><strong>No permitido</strong></p>
+    <strong>No permitido</strong>
     <div class="q-pb-sm row items-center" v-if="!cameraPermission">
       <div>
         <q-icon name="photo_camera" />
@@ -74,7 +74,6 @@ const locationPermission = ref(false);
 
 const checkCameraPermission = async () => {
   const result = await Camera.checkPermissions();
-  console.log('[CAMARA]: ', JSON.stringify(result.camera));
   if (result.camera === 'granted') {
     cameraPermission.value = true;
   } else {
@@ -84,7 +83,6 @@ const checkCameraPermission = async () => {
 
 const checkLocationPermission = async () => {
   const result = await Geolocation.checkPermissions();
-  console.log('[GPS]: ', JSON.stringify(result));
   if (result.location === 'granted') {
     locationPermission.value = true;
   } else {
@@ -104,34 +102,6 @@ const toggleCameraPermission = async () => {
   }
 };
 
-// const toggleLocationPermission = async () => {
-//   if (locationPermission.value) {
-//     // If already have permission, you can revoke it here
-//     try {
-//       await Geolocation.requestPermissions({
-//         permissions: ['geolocation'],
-//         revoke: true,
-//       });
-//       locationPermission.value = false;
-//     } catch (error) {
-//       console.error('Error requesting geolocation permission:', error);
-//       // Handle the error as needed
-//     }
-//   } else {
-//     console.log('[DIO CLICK]');
-//     // If no permission, request it again
-//     // await Geolocation.requestPermissions({ permissions: ['geolocation'] });
-//     // locationPermission.value = true;
-//     try {
-//       await Geolocation.requestPermissions({ permissions: ['geolocation'] });
-//       locationPermission.value = true;
-//     } catch (error) {
-//       console.error('Error requesting geolocation permission:', error);
-//       // Handle the error as needed
-//     }
-//   }
-// };
-
 const toggleLocationPermission = async () => {
   if (locationPermission.value) {
     // Si ya tiene permiso, puedes revocarlo aquí
@@ -141,7 +111,6 @@ const toggleLocationPermission = async () => {
     });
     locationPermission.value = false;
   } else {
-    console.log('[DIO CLICK]');
     // Si no tiene permiso, solicítalo nuevamente
     await Geolocation.requestPermissions({ permissions: ['location'] });
     locationPermission.value = true;
