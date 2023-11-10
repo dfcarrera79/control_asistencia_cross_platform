@@ -22,9 +22,12 @@
     >
       <div>Registrar Entrada</div>
     </h4>
-    <div class="row">
-      <div v-if="!showCamera" class="col-12 text-center q-pt-md">
+    <div class="column justify-center items-center content-center">
+      <div v-if="!showCamera && !registrado" class="col-12 text-center q-pt-md">
         <img alt="QR code" src="../assets/logo.jpg" style="width: 340px" />
+      </div>
+      <div v-if="registrado" class="col-12">
+        <img :src="foto" alt="Foto tomada" style="width: 150px" />
       </div>
     </div>
     <div class="row justify-center q-pt-lg">
@@ -47,26 +50,6 @@
         </div>
       </div>
     </div>
-    <!-- <div class="row justify-center q-pt-lg">
-      <div class="col text-center">
-        <div>
-          <span class="text-subtitle2 text-grey-9" v-if="!registrado">
-            {{ textInfo }}
-          </span>
-        </div>
-        <div v-if="!registrado">
-          <q-btn
-            color="primary"
-            rounded
-            icon="camera_alt"
-            label="Tomar selfie"
-            size="lg"
-            @click="takeSelfie"
-            v-show="!showCamera"
-          />
-        </div>
-      </div>
-    </div> -->
     <div
       class="q-pa-md row justify-center items-start q-gutter-md"
       v-if="registrado"
@@ -82,12 +65,6 @@
         </q-card-section>
       </q-card>
     </div>
-    <div v-if="registrado" class="col-12 text-center q-pt-md">
-      <img :src="foto" alt="Foto tomada" style="width: 340px" />
-    </div>
-    <!-- <div class="col-12 text-center q-pt-md">
-      <img :src="foto" alt="Foto tomada" style="width: 340px" />
-    </div> -->
   </q-page>
 </template>
 
@@ -102,7 +79,6 @@ import { Device } from '@capacitor/device';
 import { useAxios } from '../services/useAxios';
 import { DeviceId } from '../components/models';
 import { LocalStorage, useQuasar } from 'quasar';
-import { Filesystem } from '@capacitor/filesystem';
 import { Geolocation } from '@capacitor/geolocation';
 import { obtenerDistancia } from '../utils/AppUtils';
 import { RespuestaCoordenadas, Session } from '../components/models';
@@ -121,6 +97,7 @@ const codigo = ref(0);
 const $q = useQuasar();
 const check = ref(false);
 const checkRegistro = ref(false);
+const checkSelfie = ref(false);
 const resultado = ref('');
 const registrado = ref(false);
 const showCamera = ref(false);
@@ -138,16 +115,26 @@ onMounted(() => {
   codigo.value = session?.codigo || 0;
 });
 
-// const subirFoto = async (file: File) => {
-//   try {
-//     const formData = new FormData();
-//     formData.append('file', file);
-//     const respt = await post('/subir_foto', {}, formData);
-//     return respt.files.file.filepath;
-//   } catch (error) {
-//     console.error('[ERROR AL SUBIR LA FOTO]:', error);
-//   }
-// };
+const subirFoto = async (file: File, code: number) => {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    const newQuery = `/comparar_fotos/${code}`;
+    const respt = await post(newQuery, {}, formData);
+
+    // Handle the response accordingly
+    $q.notify({
+      color: respt.error === 'N' ? 'green-4' : 'red-5',
+      textColor: 'white',
+      icon: respt.error === 'N' ? 'cloud_done' : 'warning',
+      message: respt.mensaje,
+      timeout: 10000,
+    });
+    return respt;
+  } catch (error) {
+    console.error('[ERROR AL SUBIR LA FOTO]:', error);
+  }
+};
 
 const takeSelfie = async () => {
   try {
@@ -165,14 +152,15 @@ const takeSelfie = async () => {
       // result.webPath contiene la URL de la imagen tomada
       foto.value = image.webPath;
 
-      // const respt = await fetch(image.webPath);
+      const respt = await fetch(image.webPath);
 
-      // if (respt.ok) {
-      //   const data = await respt.blob();
-      //   const file = new File([data], 'foto.jpg');
+      if (respt.ok) {
+        const data = await respt.blob();
+        const file = new File([data], 'foto.jpg');
 
-      //   subirFoto(file);
-      // }
+        const response = await subirFoto(file, codigo.value);
+        return response.objetos;
+      }
     }
   } catch (error) {
     console.error('[ERROR AL TOMAR LA SELFIE] :', error);
@@ -194,7 +182,6 @@ const registrarEntrada = async (employee_id: number) => {
     if (response.error === 'N') {
       checkRegistro.value = true;
       text.value = "Registro de entrada: '" + currentTime + "'";
-      takeSelfie();
     }
     // Handle the response accordingly
     $q.notify({
@@ -202,6 +189,7 @@ const registrarEntrada = async (employee_id: number) => {
       textColor: 'white',
       icon: response.error === 'N' ? 'cloud_done' : 'warning',
       message: response.mensaje,
+      timeout: 10000,
     });
   } catch (error) {
     console.error('Error registrando las coordenadas:', error);
@@ -259,6 +247,7 @@ const verificarDispositivo = async () => {
       textColor: 'white',
       icon: 'warning',
       message: '¡No se encuentra el dispositivo registrado en el sistema!',
+      timeout: 10000,
     });
     check.value = false;
   }
@@ -327,13 +316,17 @@ const startScan = async () => {
     );
 
     if (distance.value <= maxDistance && check.value === true) {
-      await registrarEntrada(codigo.value);
-      if (checkRegistro.value == true) {
-        hora.value = new Date().toLocaleTimeString();
-        registrado.value = true;
+      checkSelfie.value = await takeSelfie();
+
+      if (checkSelfie.value === true) {
+        await registrarEntrada(codigo.value);
+        if (checkRegistro.value == true) {
+          hora.value = new Date().toLocaleTimeString();
+          registrado.value = true;
+        }
+      } else {
+        registrado.value = false;
       }
-    } else {
-      registrado.value = false;
     }
 
     $q.notify({
@@ -344,6 +337,7 @@ const startScan = async () => {
         distance.value <= maxDistance
           ? 'El dispositivo está dentro del rango especificado.'
           : 'El dispositivo está fuera del rango especificado.',
+      timeout: 10000,
     });
   }
 };

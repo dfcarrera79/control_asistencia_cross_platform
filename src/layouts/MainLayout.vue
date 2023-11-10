@@ -80,6 +80,26 @@
           <q-item
             clickable
             v-ripple
+            to="/registro_facial"
+            active-class="my-menu-link"
+          >
+            <q-item-section avatar>
+              <q-icon name="camera_front" color="grey-9" />
+            </q-item-section>
+
+            <q-item-section>
+              <span
+                class="text-grey-9 text-h6"
+                style="font-family: 'Bebas Neue'"
+              >
+                REGISTRO FACIAL
+              </span>
+            </q-item-section>
+          </q-item>
+
+          <q-item
+            clickable
+            v-ripple
             to="/registro_dispositivo"
             active-class="my-menu-link"
           >

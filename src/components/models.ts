@@ -19,6 +19,12 @@ export interface Respuesta {
   objetos: number;
 }
 
+export interface RespuestaSelfie {
+  error: string;
+  mensaje: string;
+  objetos: boolean;
+}
+
 export interface DeviceId {
   identifier: string;
 }

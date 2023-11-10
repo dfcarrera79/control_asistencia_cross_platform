@@ -22,9 +22,12 @@
     >
       <div>Registrar Salida</div>
     </h4>
-    <div class="row">
-      <div v-if="!showCamera" class="col-12 text-center q-pt-md">
+    <div class="column justify-center items-center content-center">
+      <div v-if="!showCamera && !registrado" class="col-12 text-center q-pt-md">
         <img alt="QR code" src="../assets/logo.jpg" style="width: 340px" />
+      </div>
+      <div v-if="registrado" class="col-12">
+        <img :src="foto" alt="Foto tomada" style="width: 150px" />
       </div>
     </div>
     <div class="row justify-center q-pt-lg">
@@ -66,6 +69,12 @@
 </template>
 
 <script setup lang="ts">
+import {
+  Camera,
+  CameraResultType,
+  CameraSource,
+  CameraDirection,
+} from '@capacitor/camera';
 import { Device } from '@capacitor/device';
 import { DeviceId } from '../components/models';
 import { useAxios } from '../services/useAxios';
@@ -81,16 +90,18 @@ import {
 
 // Data
 const id = ref('');
+const foto = ref();
 const hora = ref('');
 const text = ref('');
 const codigo = ref(0);
 const $q = useQuasar();
 const check = ref(false);
 const checkRegistro = ref(false);
+const checkSelfie = ref(false);
 const resultado = ref('');
 const registrado = ref(false);
 const showCamera = ref(false);
-const { get, put } = useAxios();
+const { get, put, post } = useAxios();
 let currentTime = new Date().toLocaleTimeString();
 const newPos = ref({
   latitude: 0,
@@ -103,6 +114,58 @@ onMounted(() => {
   const session: Session | null = LocalStorage.getItem('session');
   codigo.value = session?.codigo || 0;
 });
+
+const subirFoto = async (file: File, code: number) => {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    const newQuery = `/comparar_fotos/${code}`;
+    const respt = await post(newQuery, {}, formData);
+
+    // Handle the response accordingly
+    $q.notify({
+      color: respt.error === 'N' ? 'green-4' : 'red-5',
+      textColor: 'white',
+      icon: respt.error === 'N' ? 'cloud_done' : 'warning',
+      message: respt.mensaje,
+      timeout: 10000,
+    });
+    return respt;
+  } catch (error) {
+    console.error('[ERROR AL SUBIR LA FOTO]:', error);
+  }
+};
+
+const takeSelfie = async () => {
+  try {
+    const image = await Camera.getPhoto({
+      quality: 90,
+      allowEditing: false,
+      resultType: CameraResultType.Uri,
+      source: CameraSource.Camera,
+      direction: CameraDirection.Front,
+      width: 1024,
+      height: 768,
+    });
+
+    if (image.webPath) {
+      // result.webPath contiene la URL de la imagen tomada
+      foto.value = image.webPath;
+
+      const respt = await fetch(image.webPath);
+
+      if (respt.ok) {
+        const data = await respt.blob();
+        const file = new File([data], 'foto.jpg');
+
+        const response = await subirFoto(file, codigo.value);
+        return response.objetos;
+      }
+    }
+  } catch (error) {
+    console.error('[ERROR AL TOMAR LA SELFIE] :', error);
+  }
+};
 
 const verificarDispositivo = async () => {
   id.value = await logDeviceInfo();
@@ -117,6 +180,7 @@ const verificarDispositivo = async () => {
       textColor: 'white',
       icon: 'warning',
       message: '¡No se encuentra el dispositivo registrado en el sistema!',
+      timeout: 10000,
     });
     check.value = false;
   }
@@ -144,6 +208,7 @@ const registrarSalida = async (employee_id: number) => {
       textColor: 'white',
       icon: response.error === 'N' ? 'cloud_done' : 'warning',
       message: response.mensaje,
+      timeout: 10000,
     });
   } catch (error) {
     console.error('Error registrando las coordenadas:', error);
@@ -167,6 +232,7 @@ const printCurrentPosition = async () => {
       textColor: 'white',
       icon: 'warning',
       message: '¡Debe chequear los permisos de gps en las configuraciones!',
+      timeout: 10000,
     });
   }
 };
@@ -251,12 +317,16 @@ const startScan = async () => {
     );
 
     if (distance.value <= maxDistance && check.value === true) {
-      await registrarSalida(codigo.value);
-      if (checkRegistro.value == true) {
-        hora.value = new Date().toLocaleTimeString();
-        registrado.value = true;
-      } else {
-        registrado.value = false;
+      checkSelfie.value = await takeSelfie();
+
+      if (checkSelfie.value === true) {
+        await registrarSalida(codigo.value);
+        if (checkRegistro.value == true) {
+          hora.value = new Date().toLocaleTimeString();
+          registrado.value = true;
+        } else {
+          registrado.value = false;
+        }
       }
     }
 
@@ -268,6 +338,7 @@ const startScan = async () => {
         distance.value <= maxDistance
           ? 'El dispositivo está dentro del rango especificado.'
           : 'El dispositivo está fuera del rango especificado.',
+      timeout: 10000,
     });
   }
 };
