@@ -78,13 +78,6 @@ const routes: RouteRecordRaw[] = [
     ],
   },
   {
-    path: '/cambiar_clave',
-    component: () => import('layouts/MainLayout.vue'),
-    children: [
-      { path: '', component: () => import('pages/CambiarClavePage.vue') },
-    ],
-  },
-  {
     path: '/login',
     component: () => import('layouts/LoginLayout.vue'),
     children: [{ path: '', component: () => import('pages/LoginPage.vue') }],
