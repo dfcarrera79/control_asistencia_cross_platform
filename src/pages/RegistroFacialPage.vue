@@ -94,9 +94,9 @@ import { LocalStorage, useQuasar } from 'quasar';
 
 // Data
 const foto = ref();
-const selfie = ref('');
 const file = ref();
 const codigo = ref(0);
+const selfie = ref('');
 const $q = useQuasar();
 const check = ref(false);
 const confirmar = ref(false);
@@ -170,7 +170,6 @@ const obtenerSelfie = async (code: number) => {
     usuario: code,
   });
   if (response.error === 'N') {
-    console.log('[RESPONSE]: ', JSON.stringify(response.objetos[0].path));
     selfie.value = response.objetos[0].path;
     check.value = true;
   }

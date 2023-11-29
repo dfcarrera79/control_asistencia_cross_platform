@@ -104,14 +104,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { ref, onMounted, watch } from 'vue';
 import { useAuthStore } from '../stores/auth';
-import { useAxios } from '../services/useAxios';
 import { Session } from '../components/models';
+import { useAxios } from '../services/useAxios';
 import { useMensajes } from '../services/useMensajes';
-import { LocalStorage, Loading, QSpinnerFacebook } from 'quasar';
+import { LocalStorage, Loading, QSpinnerFacebook, useQuasar } from 'quasar';
 
+const $q = useQuasar();
 const router = useRouter();
 const authStore = useAuthStore();
 const url = ref(authStore.url);
@@ -171,12 +172,46 @@ const logearse = async () => {
   const respuesta = await get('/validar_usuario', {
     id: id.value,
     clave: clave.value,
+    sys: 0,
   });
 
-  const objetos = respuesta.objetos[0];
+  if (respuesta.error === 'S') {
+    $q.notify({
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'warning',
+      message: respuesta.mensaje,
+    });
+    Loading.hide();
+    return;
+  }
+
+  let objetos;
+  let objetos2;
+  if (respuesta.error === 'N') {
+    objetos = respuesta.objetos[0];
+
+    const respuesta2 = await get('/obtener_empleado_app', {
+      id: objetos.codigo,
+    });
+
+    if (respuesta2.error === 'S') {
+      $q.notify({
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'warning',
+        message: respuesta2.mensaje,
+      });
+      Loading.hide();
+      return;
+    }
+
+    objetos2 = respuesta2.objetos[0];
+  }
+
   authStore.actualizarDatos(
     objetos.usu_nomape,
-    objetos.codigo,
+    objetos2.codigo,
     objetos.usu_login
   );
   Loading.hide();
@@ -186,7 +221,7 @@ const logearse = async () => {
   }
   authStore.iniciarSesion(
     respuesta.token,
-    objetos.codigo,
+    objetos2.codigo,
     objetos.usu_nomape,
     objetos.usu_login
   );
