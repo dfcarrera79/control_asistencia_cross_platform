@@ -19,7 +19,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { useQuasar } from 'quasar';
+import { useQuasar, LocalStorage } from 'quasar';
 import { Device } from '@capacitor/device';
 import { useAuthStore } from '../stores/auth';
 import { computed, onMounted, ref } from 'vue';
@@ -32,6 +32,7 @@ const $q = useQuasar();
 const check = ref(false);
 const { get, post } = useAxios();
 const authStore = useAuthStore();
+const session = ref();
 
 // Methods
 const logDeviceInfo = async () => {
@@ -85,5 +86,9 @@ const textInfo = computed(() => {
   return check.value
     ? 'El dispositivo ya se encuentra registrado'
     : 'Registrar dispositivo';
+});
+
+onMounted(() => {
+  session.value = LocalStorage.getItem('session');
 });
 </script>

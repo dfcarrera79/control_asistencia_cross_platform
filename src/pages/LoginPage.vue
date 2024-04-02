@@ -81,7 +81,7 @@
         </div>
       </div>
 
-      <div class="row">
+      <!-- <div class="row">
         <div class="column col-xs-12 q-pa-sm">
           <a
             class="full-width text-secondary q-link"
@@ -98,7 +98,7 @@
             >
           </a>
         </div>
-      </div>
+      </div> -->
     </q-card>
   </q-page>
 </template>
@@ -169,6 +169,7 @@ const logearse = async () => {
     spinner: QSpinnerFacebook,
     message: 'Verificando acceso...',
   });
+  console.log('[SE EJECUTA LOGEARSE]');
   const respuesta = await get('/validar_usuario', {
     id: id.value,
     clave: clave.value,
@@ -228,9 +229,9 @@ const logearse = async () => {
   router.push('/');
 };
 
-const recuperarContraseña = () => {
-  mostrarVentana.value = true;
-};
+// const recuperarContraseña = () => {
+//   mostrarVentana.value = true;
+// };
 
 async function fetchEmail() {
   try {

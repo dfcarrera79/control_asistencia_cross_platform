@@ -1,5 +1,5 @@
-export function deducirMensajeError(o_error) {
-  console.log(JSON.stringify(o_error));
+export function deducirMensajeError(o_error: any) {
+  console.log('[O_ERROR]', JSON.stringify(o_error));
   let mensaje = '';
   let hubo = false;
   if (o_error.message) {
