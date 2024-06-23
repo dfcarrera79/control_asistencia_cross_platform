@@ -7,11 +7,11 @@ export interface Meta {
   totalCount: number;
 }
 
-export interface Session {
-  estaLogeado: boolean;
-  currentURL: string;
-  token: string | null;
-}
+// export interface Session {
+//   estaLogeado: boolean;
+//   currentURL: string;
+//   token: string | null;
+// }
 
 export interface Respuesta {
   error: string;
@@ -48,6 +48,12 @@ export interface Location {
   timestamp: number;
 }
 
+// export interface User {
+//   nombre_comercial: string;
+//   clave: string;
+//   ruc_cliente: string;
+//   razon_social: string;
+// }
 export interface Session {
   estaLogeado: boolean;
   currentURL: string;
@@ -74,4 +80,56 @@ interface ObjetoCoordenadas {
 export interface Resultado {
   alm_nomcom: string;
   alm_codigo: number;
+}
+
+export interface ObjectError {
+  message: string;
+  name: string;
+  stack: string;
+  config: Config;
+}
+
+interface Config {
+  url: string;
+  method: string;
+  headers: Headers;
+  params: Params;
+  transformRequest: null[];
+  transformResponse: null[];
+  timeout: number;
+  xsrfCookieName: string;
+  xsrfHeaderName: string;
+  maxContentLength: number;
+  maxBodyLength: number;
+  transitional: Transitional;
+}
+
+interface Transitional {
+  silentJSONParsing: boolean;
+  forcedJSONParsing: boolean;
+  clarifyTimeoutError: boolean;
+}
+
+interface Params {
+  id: string;
+  clave: string;
+}
+
+interface HorarioObject {
+  horario: NuevoHorario[];
+}
+
+export interface NuevoHorario {
+  end: string;
+  time: string;
+  start: string;
+  title: string;
+  bgcolor: string;
+  details: string;
+}
+
+export interface RespuestaHorarioEmpleado {
+  error: string;
+  mensaje: string;
+  objetos: HorarioObject[];
 }

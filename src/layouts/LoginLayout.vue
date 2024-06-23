@@ -1,3 +1,5 @@
+<script setup lang="ts"></script>
+
 <template>
   <q-layout view="hHh lpR fFf">
     <q-page-container>
@@ -5,8 +7,6 @@
     </q-page-container>
   </q-layout>
 </template>
-
-<script setup lang="ts"></script>
 
 <style lang="scss">
 .my-menu-link {

@@ -1,3 +1,64 @@
+<script setup lang="ts">
+import { onMounted, ref } from 'vue';
+import { Plugins } from '@capacitor/core';
+
+const { Camera } = Plugins;
+const { Geolocation } = Plugins;
+
+const cameraPermission = ref(false);
+const locationPermission = ref(false);
+
+const checkCameraPermission = async () => {
+  const result = await Camera.checkPermissions();
+  if (result.camera === 'granted') {
+    cameraPermission.value = true;
+  } else {
+    cameraPermission.value = false;
+  }
+};
+
+const checkLocationPermission = async () => {
+  const result = await Geolocation.checkPermissions();
+  if (result.location === 'granted') {
+    locationPermission.value = true;
+  } else {
+    locationPermission.value = false;
+  }
+};
+
+const toggleCameraPermission = async () => {
+  if (cameraPermission.value) {
+    // Si ya tiene permiso, puedes revocarlo aquí
+    await Camera.requestPermissions({ permissions: ['camera'], revoke: true });
+    cameraPermission.value = false;
+  } else {
+    // Si no tiene permiso, solicítalo nuevamente
+    await Camera.requestPermissions({ permissions: ['camera'] });
+    cameraPermission.value = true;
+  }
+};
+
+const toggleLocationPermission = async () => {
+  if (locationPermission.value) {
+    // Si ya tiene permiso, puedes revocarlo aquí
+    await Geolocation.requestPermissions({
+      permissions: ['location'],
+      revoke: true,
+    });
+    locationPermission.value = false;
+  } else {
+    // Si no tiene permiso, solicítalo nuevamente
+    await Geolocation.requestPermissions({ permissions: ['location'] });
+    locationPermission.value = true;
+  }
+};
+
+onMounted(() => {
+  checkCameraPermission();
+  checkLocationPermission();
+});
+</script>
+
 <template>
   <h4
     class="row text-uppercase text-grey-8 justify-center items-center content-center q-pa-md text-center"
@@ -61,64 +122,3 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { onMounted, ref } from 'vue';
-import { Plugins } from '@capacitor/core';
-
-const { Camera } = Plugins;
-const { Geolocation } = Plugins;
-
-const cameraPermission = ref(false);
-const locationPermission = ref(false);
-
-const checkCameraPermission = async () => {
-  const result = await Camera.checkPermissions();
-  if (result.camera === 'granted') {
-    cameraPermission.value = true;
-  } else {
-    cameraPermission.value = false;
-  }
-};
-
-const checkLocationPermission = async () => {
-  const result = await Geolocation.checkPermissions();
-  if (result.location === 'granted') {
-    locationPermission.value = true;
-  } else {
-    locationPermission.value = false;
-  }
-};
-
-const toggleCameraPermission = async () => {
-  if (cameraPermission.value) {
-    // Si ya tiene permiso, puedes revocarlo aquí
-    await Camera.requestPermissions({ permissions: ['camera'], revoke: true });
-    cameraPermission.value = false;
-  } else {
-    // Si no tiene permiso, solicítalo nuevamente
-    await Camera.requestPermissions({ permissions: ['camera'] });
-    cameraPermission.value = true;
-  }
-};
-
-const toggleLocationPermission = async () => {
-  if (locationPermission.value) {
-    // Si ya tiene permiso, puedes revocarlo aquí
-    await Geolocation.requestPermissions({
-      permissions: ['location'],
-      revoke: true,
-    });
-    locationPermission.value = false;
-  } else {
-    // Si no tiene permiso, solicítalo nuevamente
-    await Geolocation.requestPermissions({ permissions: ['location'] });
-    locationPermission.value = true;
-  }
-};
-
-onMounted(() => {
-  checkCameraPermission();
-  checkLocationPermission();
-});
-</script>

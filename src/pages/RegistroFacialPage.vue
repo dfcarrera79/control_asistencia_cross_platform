@@ -1,3 +1,111 @@
+<script setup lang="ts">
+import { computed, onMounted, ref } from 'vue';
+import {
+  Camera,
+  CameraResultType,
+  CameraSource,
+  CameraDirection,
+} from '@capacitor/camera';
+import { Session } from '../components/models';
+import { useAxios } from '../services/useAxios';
+import { LocalStorage, useQuasar } from 'quasar';
+
+// Data
+const foto = ref();
+const file = ref();
+const codigo = ref(0);
+const selfie = ref('');
+const $q = useQuasar();
+const check = ref(false);
+const confirmar = ref(false);
+const showCamera = ref(false);
+const path = process.env.IMAGE_PATH;
+const replacedPath = process.env.REPLACED_PATH;
+const { get, post } = useAxios();
+
+// Methods
+const takeSelfie = async () => {
+  try {
+    const image = await Camera.getPhoto({
+      quality: 90,
+      allowEditing: false,
+      resultType: CameraResultType.Uri,
+      source: CameraSource.Camera,
+      direction: CameraDirection.Front,
+      width: 1024,
+      height: 768,
+    });
+
+    if (image.webPath) {
+      // result.webPath contiene la URL de la imagen tomada
+      foto.value = image.webPath;
+      const respt = await fetch(image.webPath);
+
+      if (respt.ok) {
+        const data = await respt.blob();
+        file.value = new File([data], 'foto.jpg');
+      }
+    }
+  } catch (error) {
+    console.error('[ERROR AL TOMAR LA SELFIE] :', error);
+  }
+};
+
+const subirFoto = async (file: File) => {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    const respt = await post('/subir_foto', {}, formData);
+    return respt.objetos;
+  } catch (error) {
+    console.error('[ERROR AL SUBIR LA FOTO]:', error);
+  }
+};
+
+const procesarSelfie = async (img: File) => {
+  console.log('[SE DIO CLICK EN REGISTRAR SELFIE]');
+  if (img) {
+    const path = await subirFoto(img);
+    const response = await post(
+      '/registrar_foto',
+      {},
+      JSON.parse(JSON.stringify({ filepath: path, usuario: codigo.value }))
+    );
+    if (response.error === 'N') {
+      obtenerSelfie(codigo.value);
+    }
+    $q.notify({
+      color: response.error === 'N' ? 'green-4' : 'red-5',
+      textColor: 'white',
+      icon: response.error === 'N' ? 'cloud_done' : 'warning',
+      message: response.mensaje,
+    });
+    confirmar.value = false;
+  }
+};
+
+const obtenerSelfie = async (code: number) => {
+  const response = await get('/obtener_foto', {
+    usuario: code,
+  });
+  if (response.error === 'N') {
+    selfie.value = response.objetos[0].path;
+    check.value = true;
+  }
+};
+
+onMounted(() => {
+  const session: Session | null = LocalStorage.getItem('session');
+  codigo.value = session?.codigo || 0;
+  obtenerSelfie(codigo.value);
+});
+
+// Computed
+const textInfo = computed(() => {
+  return check.value ? 'La foto ya se encuentra registrada' : 'Registro Facial';
+});
+</script>
+
 <template>
   <h4
     class="row text-uppercase text-grey-8 justify-center items-center content-center q-pa-xs text-center"
@@ -80,109 +188,3 @@
     </q-dialog>
   </div>
 </template>
-<script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
-import {
-  Camera,
-  CameraResultType,
-  CameraSource,
-  CameraDirection,
-} from '@capacitor/camera';
-import { Session } from '../components/models';
-import { useAxios } from '../services/useAxios';
-import { LocalStorage, useQuasar } from 'quasar';
-
-// Data
-const foto = ref();
-const file = ref();
-const codigo = ref(0);
-const selfie = ref('');
-const $q = useQuasar();
-const check = ref(false);
-const confirmar = ref(false);
-const showCamera = ref(false);
-const path = process.env.IMAGE_PATH;
-const replacedPath = process.env.REPLACED_PATH;
-const { get, post } = useAxios();
-
-// Methods
-const takeSelfie = async () => {
-  try {
-    const image = await Camera.getPhoto({
-      quality: 90,
-      allowEditing: false,
-      resultType: CameraResultType.Uri,
-      source: CameraSource.Camera,
-      direction: CameraDirection.Front,
-      width: 1024,
-      height: 768,
-    });
-
-    if (image.webPath) {
-      // result.webPath contiene la URL de la imagen tomada
-      foto.value = image.webPath;
-      const respt = await fetch(image.webPath);
-
-      if (respt.ok) {
-        const data = await respt.blob();
-        file.value = new File([data], 'foto.jpg');
-      }
-    }
-  } catch (error) {
-    console.error('[ERROR AL TOMAR LA SELFIE] :', error);
-  }
-};
-
-const subirFoto = async (file: File) => {
-  try {
-    const formData = new FormData();
-    formData.append('file', file);
-    const respt = await post('/subir_foto', {}, formData);
-    return respt.objetos;
-  } catch (error) {
-    console.error('[ERROR AL SUBIR LA FOTO]:', error);
-  }
-};
-
-const procesarSelfie = async (img: File) => {
-  if (img) {
-    const path = await subirFoto(img);
-    const response = await post(
-      '/registrar_foto',
-      {},
-      JSON.parse(JSON.stringify({ filepath: path, usuario: codigo.value }))
-    );
-    if (response.error === 'N') {
-      obtenerSelfie(codigo.value);
-    }
-    $q.notify({
-      color: response.error === 'N' ? 'green-4' : 'red-5',
-      textColor: 'white',
-      icon: response.error === 'N' ? 'cloud_done' : 'warning',
-      message: response.mensaje,
-    });
-    confirmar.value = false;
-  }
-};
-
-const obtenerSelfie = async (code: number) => {
-  const response = await get('/obtener_foto', {
-    usuario: code,
-  });
-  if (response.error === 'N') {
-    selfie.value = response.objetos[0].path;
-    check.value = true;
-  }
-};
-
-onMounted(() => {
-  const session: Session | null = LocalStorage.getItem('session');
-  codigo.value = session?.codigo || 0;
-  obtenerSelfie(codigo.value);
-});
-
-// Computed
-const textInfo = computed(() => {
-  return check.value ? 'La foto ya se encuentra registrada' : 'Registro Facial';
-});
-</script>

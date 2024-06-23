@@ -1,73 +1,3 @@
-<template>
-  <q-page>
-    <div class="sample-background">
-      <!-- this background simulates the camera view -->
-    </div>
-    <div v-if="showCamera" class="container">
-      <div class="barcode-scanner--area--container">
-        <div class="relative">
-          <p>Apunta tu cámara al código QR</p>
-        </div>
-        <div class="square surround-cover">
-          <div class="barcode-scanner--area--outer surround-cover">
-            <div class="barcode-scanner--area--inner"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <h4
-      v-if="!showCamera"
-      class="row text-uppercase text-grey-8 justify-center items-center content-center q-pa-md text-center"
-      style="font-family: 'Bebas Neue'"
-    >
-      <div>Registrar Entrada</div>
-    </h4>
-    <div class="column justify-center items-center content-center">
-      <div v-if="!showCamera && !registrado" class="col-12 text-center q-pt-md">
-        <img alt="QR code" src="../assets/logo.jpg" style="width: 340px" />
-      </div>
-      <div v-if="registrado" class="col-12">
-        <img :src="foto" alt="Foto tomada" style="width: 150px" />
-      </div>
-    </div>
-    <div class="row justify-center q-pt-lg">
-      <div class="col text-center">
-        <div>
-          <span class="text-subtitle2 text-grey-9" v-if="!registrado">
-            {{ textInfo }}
-          </span>
-        </div>
-        <div v-if="!registrado">
-          <q-btn
-            color="primary"
-            rounded
-            icon="camera_alt"
-            label="Escanear código QR"
-            size="lg"
-            @click="startScan()"
-            v-show="!showCamera"
-          />
-        </div>
-      </div>
-    </div>
-    <div
-      class="q-pa-md row justify-center items-start q-gutter-md"
-      v-if="registrado"
-    >
-      <q-card
-        class="my-card text-white"
-        style="background: radial-gradient(circle, #35a2ff 0%, #014a88 100%)"
-      >
-        <q-card-section class="q-pa-md">
-          <strong>Hora de entrada: </strong> {{ hora }}
-          <br />
-          <strong>Lugar de trabajo: </strong> {{ resultado }}
-        </q-card-section>
-      </q-card>
-    </div>
-  </q-page>
-</template>
-
 <script setup lang="ts">
 import {
   Camera,
@@ -376,6 +306,76 @@ const obtenerCoordenadas = async (nombre: string) => {
   }
 };
 </script>
+
+<template>
+  <q-page>
+    <div class="sample-background">
+      <!-- this background simulates the camera view -->
+    </div>
+    <div v-if="showCamera" class="container">
+      <div class="barcode-scanner--area--container">
+        <div class="relative">
+          <p>Apunta tu cámara al código QR</p>
+        </div>
+        <div class="square surround-cover">
+          <div class="barcode-scanner--area--outer surround-cover">
+            <div class="barcode-scanner--area--inner"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <h4
+      v-if="!showCamera"
+      class="row text-uppercase text-grey-8 justify-center items-center content-center q-pa-md text-center"
+      style="font-family: 'Bebas Neue'"
+    >
+      <div>Registrar Entrada</div>
+    </h4>
+    <div class="column justify-center items-center content-center">
+      <div v-if="!showCamera && !registrado" class="col-12 text-center q-pt-md">
+        <img alt="QR code" src="../assets/logo.jpg" style="width: 340px" />
+      </div>
+      <div v-if="registrado" class="col-12">
+        <img :src="foto" alt="Foto tomada" style="width: 150px" />
+      </div>
+    </div>
+    <div class="row justify-center q-pt-lg">
+      <div class="col text-center">
+        <div>
+          <span class="text-subtitle2 text-grey-9" v-if="!registrado">
+            {{ textInfo }}
+          </span>
+        </div>
+        <div v-if="!registrado">
+          <q-btn
+            color="primary"
+            rounded
+            icon="camera_alt"
+            label="Escanear código QR"
+            size="lg"
+            @click="startScan()"
+            v-show="!showCamera"
+          />
+        </div>
+      </div>
+    </div>
+    <div
+      class="q-pa-md row justify-center items-start q-gutter-md"
+      v-if="registrado"
+    >
+      <q-card
+        class="my-card text-white"
+        style="background: radial-gradient(circle, #35a2ff 0%, #014a88 100%)"
+      >
+        <q-card-section class="q-pa-md">
+          <strong>Hora de entrada: </strong> {{ hora }}
+          <br />
+          <strong>Lugar de trabajo: </strong> {{ resultado }}
+        </q-card-section>
+      </q-card>
+    </div>
+  </q-page>
+</template>
 
 <style scoped>
 @import '../css/registro.asistencia.scss';

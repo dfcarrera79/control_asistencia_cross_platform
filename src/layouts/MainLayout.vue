@@ -1,3 +1,33 @@
+<script setup lang="ts">
+import { onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '../stores/auth';
+import { LocalStorage } from 'quasar';
+import { Session } from '../components/models';
+
+const router = useRouter();
+const authStore = useAuthStore();
+const usuario = ref('');
+
+// Methods
+onMounted(() => {
+  const session: Session | null = LocalStorage.getItem('session');
+  usuario.value = session?.usuario || '';
+});
+
+const cerrarSesion = () => {
+  authStore.estaLogeado = false;
+  router.push('/login');
+  LocalStorage.clear();
+};
+
+const leftDrawerOpen = ref(false);
+
+function toggleLeftDrawer() {
+  leftDrawerOpen.value = !leftDrawerOpen.value;
+}
+</script>
+
 <template>
   <q-layout view="lHh Lpr lFf">
     <q-header elevated>
@@ -162,6 +192,62 @@
               </span>
             </q-item-section>
           </q-item>
+
+          <q-item
+            clickable
+            v-ripple
+            to="/registrar_entrada_salida"
+            active-class="my-menu-link"
+          >
+            <q-item-section avatar>
+              <div class="row">
+                <q-icon size="1.5em" name="timer" color="grey-9" />
+              </div>
+            </q-item-section>
+
+            <q-item-section>
+              <span
+                class="text-grey-9 text-h6"
+                style="font-family: 'Bebas Neue'"
+              >
+                REGISTRAR ENTRADA/SALIDA
+              </span>
+            </q-item-section>
+          </q-item>
+
+          <q-item clickable v-ripple to="/mapas" active-class="my-menu-link">
+            <q-item-section avatar>
+              <div class="row">
+                <q-icon size="1.5em" name="map" color="grey-9" />
+              </div>
+            </q-item-section>
+
+            <q-item-section>
+              <span
+                class="text-grey-9 text-h6"
+                style="font-family: 'Bebas Neue'"
+              >
+                Mapa
+              </span>
+            </q-item-section>
+          </q-item>
+
+          <q-item clickable v-ripple to="/rutas" active-class="my-menu-link">
+            <q-item-section avatar>
+              <div class="row">
+                <q-icon size="1.5em" name="alt_route" color="grey-9" />
+              </div>
+            </q-item-section>
+
+            <q-item-section>
+              <span
+                class="text-grey-9 text-h6"
+                style="font-family: 'Bebas Neue'"
+              >
+                Rutas
+              </span>
+            </q-item-section>
+          </q-item>
         </q-list>
       </q-scroll-area>
 
@@ -178,33 +264,3 @@
     </q-page-container>
   </q-layout>
 </template>
-
-<script setup lang="ts">
-import { onMounted, ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { useAuthStore } from '../stores/auth';
-import { LocalStorage } from 'quasar';
-import { Session } from '../components/models';
-
-const router = useRouter();
-const authStore = useAuthStore();
-const usuario = ref('');
-
-// Methods
-onMounted(() => {
-  const session: Session | null = LocalStorage.getItem('session');
-  usuario.value = session?.usuario || '';
-});
-
-const cerrarSesion = () => {
-  authStore.estaLogeado = false;
-  router.push('/login');
-  LocalStorage.clear();
-};
-
-const leftDrawerOpen = ref(false);
-
-function toggleLeftDrawer() {
-  leftDrawerOpen.value = !leftDrawerOpen.value;
-}
-</script>

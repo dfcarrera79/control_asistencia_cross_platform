@@ -1,108 +1,3 @@
-<template>
-  <q-page class="flex flex-center bg-image">
-    <q-dialog v-model="mostrarVentana" persistent>
-      <q-card>
-        <div class="row bg-blue-8 justify-center q-pa-xs">
-          <span
-            class="text-h6 text-center text-white"
-            style="font-family: 'Bebas Neue'"
-            >Cambiar clave de acceso</span
-          >
-        </div>
-        <q-card-section>
-          <q-input
-            v-model="ruc"
-            debounce="750"
-            label="RUC | CI | Pasaporte"
-            dense
-            :rules="rucRule"
-            @input="fetchEmail"
-          />
-          <q-input
-            v-model="correoElectronico"
-            debounce="750"
-            label="Email"
-            dense
-            :rules="emailRule"
-          />
-        </q-card-section>
-
-        <q-card-actions align="right">
-          <q-btn
-            color="primary"
-            label="Enviar"
-            @click="enviarCorreoRecuperacion()"
-          />
-          <q-btn flat label="Cerrar" @click="mostrarVentana = false" />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
-
-    <q-card class="shadow-8 bg-white" style="width: 300px; height: 260px">
-      <div class="row bg-blue-8 justify-center q-pa-xs">
-        <span
-          class="text-h6 text-center text-white"
-          style="font-family: 'Bebas Neue'"
-          >CONTROL DE ASISTENCIA APP V0.1</span
-        >
-      </div>
-      <div class="row">
-        <div class="column col-xs-12 q-pa-sm">
-          <q-input v-model="id" type="text" label="Usuario" dense />
-        </div>
-        <div class="column col-xs-12 q-pa-sm">
-          <q-input
-            v-model="clave"
-            dense
-            :type="isPwd ? 'password' : 'text'"
-            label="Clave de acceso"
-            @keyup.enter="logearse()"
-          >
-            <template v-slot:append>
-              <q-icon
-                :name="isPwd ? 'visibility_off' : 'visibility'"
-                class="cursor-pointer"
-                @click="isPwd = !isPwd"
-              />
-            </template>
-          </q-input>
-        </div>
-      </div>
-      <q-separator dark />
-      <div class="row">
-        <div class="column col-xs-12 q-pa-sm">
-          <q-btn
-            class="full-width text-white"
-            style="height: 40px"
-            color="primary"
-            label="Ingresar"
-            @click="logearse()"
-          />
-        </div>
-      </div>
-
-      <!-- <div class="row">
-        <div class="column col-xs-12 q-pa-sm">
-          <a
-            class="full-width text-secondary q-link"
-            style="
-              display: block;
-              height: 40px;
-              line-height: 40px;
-              text-align: center;
-            "
-            @click="recuperarContraseña()"
-          >
-            <span class="text-bold text-blue-grey"
-              >¿OLVIDASTE TU CONTRASEÑA?</span
-            >
-          </a>
-        </div>
-      </div> -->
-    </q-card>
-  </q-page>
-</template>
-
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
 import { ref, onMounted, watch } from 'vue';
@@ -268,6 +163,111 @@ const enviarCorreoRecuperacion = async () => {
   }
 };
 </script>
+
+<template>
+  <q-page class="flex flex-center bg-image">
+    <q-dialog v-model="mostrarVentana" persistent>
+      <q-card>
+        <div class="row bg-blue-8 justify-center q-pa-xs">
+          <span
+            class="text-h6 text-center text-white"
+            style="font-family: 'Bebas Neue'"
+            >Cambiar clave de acceso</span
+          >
+        </div>
+        <q-card-section>
+          <q-input
+            v-model="ruc"
+            debounce="750"
+            label="RUC | CI | Pasaporte"
+            dense
+            :rules="rucRule"
+            @input="fetchEmail"
+          />
+          <q-input
+            v-model="correoElectronico"
+            debounce="750"
+            label="Email"
+            dense
+            :rules="emailRule"
+          />
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn
+            color="primary"
+            label="Enviar"
+            @click="enviarCorreoRecuperacion()"
+          />
+          <q-btn flat label="Cerrar" @click="mostrarVentana = false" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+    <q-card class="shadow-8 bg-white" style="width: 300px; height: 260px">
+      <div class="row bg-blue-8 justify-center q-pa-xs">
+        <span
+          class="text-h6 text-center text-white"
+          style="font-family: 'Bebas Neue'"
+          >CONTROL DE ASISTENCIA APP V0.1</span
+        >
+      </div>
+      <div class="row">
+        <div class="column col-xs-12 q-pa-sm">
+          <q-input v-model="id" type="text" label="Usuario" dense />
+        </div>
+        <div class="column col-xs-12 q-pa-sm">
+          <q-input
+            v-model="clave"
+            dense
+            :type="isPwd ? 'password' : 'text'"
+            label="Clave de acceso"
+            @keyup.enter="logearse()"
+          >
+            <template v-slot:append>
+              <q-icon
+                :name="isPwd ? 'visibility_off' : 'visibility'"
+                class="cursor-pointer"
+                @click="isPwd = !isPwd"
+              />
+            </template>
+          </q-input>
+        </div>
+      </div>
+      <q-separator dark />
+      <div class="row">
+        <div class="column col-xs-12 q-pa-sm">
+          <q-btn
+            class="full-width text-white"
+            style="height: 40px"
+            color="primary"
+            label="Ingresar"
+            @click="logearse()"
+          />
+        </div>
+      </div>
+
+      <!-- <div class="row">
+        <div class="column col-xs-12 q-pa-sm">
+          <a
+            class="full-width text-secondary q-link"
+            style="
+              display: block;
+              height: 40px;
+              line-height: 40px;
+              text-align: center;
+            "
+            @click="recuperarContraseña()"
+          >
+            <span class="text-bold text-blue-grey"
+              >¿OLVIDASTE TU CONTRASEÑA?</span
+            >
+          </a>
+        </div>
+      </div> -->
+    </q-card>
+  </q-page>
+</template>
 
 <style>
 .hover-primary:hover {

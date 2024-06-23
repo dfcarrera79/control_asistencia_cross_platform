@@ -1,23 +1,3 @@
-<template>
-  <h4
-    class="row text-uppercase text-grey-8 justify-center items-center content-center q-pa-md text-center"
-    style="font-family: 'Bebas Neue'"
-  >
-    <div class="q-pt-md">{{ textInfo }}</div>
-  </h4>
-
-  <div class="row justify-center">
-    <q-btn
-      color="primary"
-      rounded
-      icon="phone_android"
-      label="Registrar dispositivo"
-      size="lg"
-      @click="registrarDispositivo"
-      v-show="!check"
-    />
-  </div>
-</template>
 <script setup lang="ts">
 import { useQuasar, LocalStorage } from 'quasar';
 import { Device } from '@capacitor/device';
@@ -92,3 +72,24 @@ onMounted(() => {
   session.value = LocalStorage.getItem('session');
 });
 </script>
+
+<template>
+  <h4
+    class="row text-uppercase text-grey-8 justify-center items-center content-center q-pa-md text-center"
+    style="font-family: 'Bebas Neue'"
+  >
+    <div class="q-pt-md">{{ textInfo }}</div>
+  </h4>
+
+  <div class="row justify-center">
+    <q-btn
+      color="primary"
+      rounded
+      icon="phone_android"
+      label="Registrar dispositivo"
+      size="lg"
+      @click="registrarDispositivo"
+      v-show="!check"
+    />
+  </div>
+</template>
