@@ -1,7 +1,7 @@
 <script setup lang="ts"></script>
 
 <template>
-  <q-page class="column justify-center content-center">
+  <q-page padding class="column justify-center content-center page-container">
     <div
       id="mensaje"
       class="text-body1 text-weight-medium q-pa-sm"
@@ -27,8 +27,9 @@
   </q-page>
 </template>
 
-<style lang="scss">
+<style scoped lang="scss">
 #mensaje {
   color: $blue-grey-10;
 }
+@import '../css/page.container.scss';
 </style>

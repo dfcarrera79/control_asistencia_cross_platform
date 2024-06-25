@@ -107,84 +107,90 @@ const textInfo = computed(() => {
 </script>
 
 <template>
-  <h4
-    class="row text-uppercase text-grey-8 justify-center items-center content-center q-pa-xs text-center"
-    style="font-family: 'Bebas Neue'"
-  >
-    <div class="q-pt-none">{{ textInfo }}</div>
-  </h4>
+  <q-page padding class="page-container">
+    <h4
+      class="row text-uppercase text-grey-8 justify-center items-center content-center q-pa-xs text-center"
+      style="font-family: 'Bebas Neue'"
+    >
+      <div class="q-pt-none">{{ textInfo }}</div>
+    </h4>
 
-  <div class="col-12 text-center q-pt-none" v-if="foto && !check">
-    <img :src="foto" alt="Foto tomada" style="width: 340px" />
-  </div>
+    <div class="col-12 text-center q-pt-none" v-if="foto && !check">
+      <img :src="foto" alt="Foto tomada" style="width: 340px" />
+    </div>
 
-  <div class="col-12 text-center q-pt-none" v-if="check">
-    <img
-      :src="selfie.replace(path as string, replacedPath as string)"
-      alt="Foto tomada"
-      style="width: 340px"
-    />
-  </div>
+    <div class="col-12 text-center q-pt-none" v-if="check">
+      <img
+        :src="selfie.replace(path as string, replacedPath as string)"
+        alt="Foto tomada"
+        style="width: 340px"
+      />
+    </div>
 
-  <div class="row justify-center q-pt-lg">
-    <div class="col text-center">
-      <div v-if="foto">
-        <q-btn
-          no-caps
-          v-if="!check"
-          color="primary"
-          rounded
-          icon="upload"
-          label="Registrar selfie"
-          size="lg"
-          @click="confirmar = true"
-        />
-      </div>
-      <div class="q-py-sm" v-if="!check">
-        <q-btn
-          no-caps
-          color="primary"
-          rounded
-          icon="camera_alt"
-          label="Tomar selfie"
-          size="lg"
-          @click="takeSelfie"
-          v-show="!showCamera"
-        />
+    <div class="row justify-center q-pt-lg">
+      <div class="col text-center">
+        <div v-if="foto">
+          <q-btn
+            no-caps
+            v-if="!check"
+            color="primary"
+            rounded
+            icon="upload"
+            label="Registrar selfie"
+            size="lg"
+            @click="confirmar = true"
+          />
+        </div>
+        <div class="q-py-sm" v-if="!check">
+          <q-btn
+            no-caps
+            color="primary"
+            rounded
+            icon="camera_alt"
+            label="Tomar selfie"
+            size="lg"
+            @click="takeSelfie"
+            v-show="!showCamera"
+          />
+        </div>
       </div>
     </div>
-  </div>
-  <div>
-    <q-dialog v-model="confirmar" persistent>
-      <q-card>
-        <q-card-section class="row items-center">
-          <span
-            >¿Está seguro de usar esta foto para sus registros de
-            asistencia?</span
-          >
-        </q-card-section>
-
-        <q-card-section class="row items-center">
-          <div>
+    <div>
+      <q-dialog v-model="confirmar" persistent>
+        <q-card>
+          <q-card-section class="row items-center">
             <span
-              ><strong>Nota: </strong> Una vez que haya registrado la foto, no
-              podrá realizar modificaciones. Por favor, asegúrese de que la
-              imagen muestre su rostro de manera clara y centrada.</span
+              >¿Está seguro de usar esta foto para sus registros de
+              asistencia?</span
             >
-          </div>
-        </q-card-section>
+          </q-card-section>
 
-        <q-card-actions align="right">
-          <q-btn flat label="Cancelar" color="red" v-close-popup />
-          <q-btn
-            flat
-            label="Registrar selfie"
-            color="primary"
-            v-close-popup
-            @click="procesarSelfie(file)"
-          />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
-  </div>
+          <q-card-section class="row items-center">
+            <div>
+              <span
+                ><strong>Nota: </strong> Una vez que haya registrado la foto, no
+                podrá realizar modificaciones. Por favor, asegúrese de que la
+                imagen muestre su rostro de manera clara y centrada.</span
+              >
+            </div>
+          </q-card-section>
+
+          <q-card-actions align="right">
+            <q-btn flat label="Cancelar" color="red" v-close-popup />
+            <q-btn
+              flat
+              label="Registrar selfie"
+              color="primary"
+              v-close-popup
+              @click="procesarSelfie(file)"
+            />
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
+    </div>
+  </q-page>
 </template>
+
+<style scoped lang="scss">
+@import '../css/page.container.scss';
+</style>

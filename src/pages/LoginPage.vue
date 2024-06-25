@@ -165,7 +165,7 @@ const enviarCorreoRecuperacion = async () => {
 </script>
 
 <template>
-  <q-page class="flex flex-center bg-image">
+  <q-page padding class="flex flex-center bg-image">
     <q-dialog v-model="mostrarVentana" persistent>
       <q-card>
         <div class="row bg-blue-8 justify-center q-pa-xs">

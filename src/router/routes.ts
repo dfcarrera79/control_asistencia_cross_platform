@@ -88,12 +88,12 @@ const routes: RouteRecordRaw[] = [
     ],
   },
   {
-    path: '/mapas',
+    path: '/registrar_cliente',
     component: () => import('layouts/MainLayout.vue'),
     children: [
       {
         path: '',
-        component: () => import('pages/MapasPage.vue'),
+        component: () => import('pages/RegistrarClientePage.vue'),
       },
     ],
   },

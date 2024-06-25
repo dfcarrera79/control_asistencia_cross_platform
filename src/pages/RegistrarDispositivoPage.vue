@@ -74,22 +74,28 @@ onMounted(() => {
 </script>
 
 <template>
-  <h4
-    class="row text-uppercase text-grey-8 justify-center items-center content-center q-pa-md text-center"
-    style="font-family: 'Bebas Neue'"
-  >
-    <div class="q-pt-md">{{ textInfo }}</div>
-  </h4>
+  <q-page padding class="page-container">
+    <h4
+      class="row text-uppercase text-grey-8 justify-center items-center content-center q-pa-md text-center"
+      style="font-family: 'Bebas Neue'"
+    >
+      <div class="q-pt-md">{{ textInfo }}</div>
+    </h4>
 
-  <div class="row justify-center">
-    <q-btn
-      color="primary"
-      rounded
-      icon="phone_android"
-      label="Registrar dispositivo"
-      size="lg"
-      @click="registrarDispositivo"
-      v-show="!check"
-    />
-  </div>
+    <div class="row justify-center">
+      <q-btn
+        color="primary"
+        rounded
+        icon="phone_android"
+        label="Registrar dispositivo"
+        size="lg"
+        @click="registrarDispositivo"
+        v-show="!check"
+      />
+    </div>
+  </q-page>
 </template>
+
+<style scoped lang="scss">
+@import '../css/page.container.scss';
+</style>

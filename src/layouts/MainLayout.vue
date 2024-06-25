@@ -30,7 +30,7 @@ function toggleLeftDrawer() {
 
 <template>
   <q-layout view="lHh Lpr lFf">
-    <q-header elevated>
+    <q-header>
       <q-toolbar>
         <q-btn
           flat
@@ -215,10 +215,15 @@ function toggleLeftDrawer() {
             </q-item-section>
           </q-item>
 
-          <q-item clickable v-ripple to="/mapas" active-class="my-menu-link">
+          <q-item
+            clickable
+            v-ripple
+            to="/registrar_cliente"
+            active-class="my-menu-link"
+          >
             <q-item-section avatar>
               <div class="row">
-                <q-icon size="1.5em" name="map" color="grey-9" />
+                <q-icon size="1.5em" name="my_location" color="grey-9" />
               </div>
             </q-item-section>
 
@@ -227,7 +232,7 @@ function toggleLeftDrawer() {
                 class="text-grey-9 text-h6"
                 style="font-family: 'Bebas Neue'"
               >
-                Mapa
+                Registrar Cliente
               </span>
             </q-item-section>
           </q-item>

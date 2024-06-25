@@ -421,7 +421,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <q-page>
+  <q-page padding class="page-container">
     <div class="sample-background">
       <!-- this background simulates the camera view -->
     </div>
@@ -501,6 +501,7 @@ onMounted(async () => {
   </q-page>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 @import '../css/registro.asistencia.scss';
+@import '../css/page.container.scss';
 </style>
