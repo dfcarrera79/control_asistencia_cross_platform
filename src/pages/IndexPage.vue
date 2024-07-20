@@ -15,7 +15,9 @@
 
       <p>
         <a href="https://wa.me/593986704083" target="_blank">0986704083</a> -
-        <a href="mailto:dfcarrera@outlook.com">dfcarrera@outlook.com</a>
+        <a href="mailto:diego.carrera@loxasoluciones.com"
+          >diego.carrera@loxasoluciones.com</a
+        >
       </p>
 
       <p>

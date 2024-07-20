@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
+import { LocalStorage } from 'quasar';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
-import { LocalStorage } from 'quasar';
 import { Session } from '../components/models';
 
+const usuario = ref('');
 const router = useRouter();
 const authStore = useAuthStore();
-const usuario = ref('');
 
 // Methods
 onMounted(() => {
@@ -150,6 +150,25 @@ function toggleLeftDrawer() {
           <q-item
             clickable
             v-ripple
+            to="/vacaciones"
+            active-class="my-menu-link"
+          >
+            <q-item-section avatar>
+              <q-icon name="luggage" color="grey-9" />
+            </q-item-section>
+            <q-item-section>
+              <span
+                class="text-grey-9 text-h6"
+                style="font-family: 'Bebas Neue'"
+              >
+                Vacaciones/Excepciones
+              </span>
+            </q-item-section>
+          </q-item>
+
+          <q-item
+            clickable
+            v-ripple
             to="/registro_asistencia"
             active-class="my-menu-link"
           >
@@ -250,6 +269,24 @@ function toggleLeftDrawer() {
                 style="font-family: 'Bebas Neue'"
               >
                 Rutas
+              </span>
+            </q-item-section>
+          </q-item>
+          <q-item
+            clickable
+            v-ripple
+            to="/cambiar_clave"
+            active-class="my-menu-link"
+          >
+            <q-item-section avatar>
+              <q-icon name="password" color="grey-9" />
+            </q-item-section>
+            <q-item-section>
+              <span
+                class="text-grey-9 text-h6"
+                style="font-family: 'Bebas Neue'"
+              >
+                CAMBIAR CLAVE
               </span>
             </q-item-section>
           </q-item>

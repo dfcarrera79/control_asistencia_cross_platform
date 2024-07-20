@@ -10,9 +10,11 @@ import { DeviceId } from '../components/models';
 import { useAxios } from '../services/useAxios';
 import { LocalStorage, useQuasar } from 'quasar';
 import { Geolocation } from '@capacitor/geolocation';
-import { obtenerDistancia } from '../utils/AppUtils';
+import { useMensajes } from '../services/useMensajes';
+import type { ObjectError } from '../components/models';
 import { RespuestaCoordenadas, Session } from '../components/models';
-import { computed, onDeactivated, onBeforeUnmount, ref, onMounted } from 'vue';
+import { onDeactivated, onBeforeUnmount, ref, onMounted } from 'vue';
+import { obtenerDistancia, deducirMensajeError } from '../utils/AppUtils';
 import {
   BarcodeScanner,
   ScanResult,
@@ -32,6 +34,7 @@ const resultado = ref('');
 const registrado = ref(false);
 const showCamera = ref(false);
 const { get, put, post } = useAxios();
+const { mostrarMensaje } = useMensajes();
 let currentTime = new Date().toLocaleTimeString();
 const newPos = ref({
   latitude: 0,
@@ -41,6 +44,7 @@ const newPos = ref({
 
 // Methods
 onMounted(() => {
+  stopScan();
   const session: Session | null = LocalStorage.getItem('session');
   codigo.value = session?.codigo || 0;
 });
@@ -62,7 +66,7 @@ const subirFoto = async (file: File, code: number) => {
     });
     return respt;
   } catch (error) {
-    console.error('[ERROR AL SUBIR LA FOTO]:', error);
+    deducirMensajeError(error as ObjectError);
   }
 };
 
@@ -93,7 +97,7 @@ const takeSelfie = async () => {
       }
     }
   } catch (error) {
-    console.error('[ERROR AL TOMAR LA SELFIE] :', error);
+    deducirMensajeError(error as ObjectError);
   }
 };
 
@@ -141,7 +145,7 @@ const registrarSalida = async (employee_id: number) => {
       timeout: 10000,
     });
   } catch (error) {
-    console.error('Error registrando las coordenadas:', error);
+    deducirMensajeError(error as ObjectError);
   }
 };
 
@@ -178,12 +182,6 @@ const logDeviceInfo = async () => {
   const info: DeviceId = await Device.getId();
   return info.identifier;
 };
-
-const textInfo = computed(() => {
-  return showCamera.value
-    ? 'posiciona el código QR en el centro de la pantalla'
-    : 'Presiona el botón y escanea el código QR';
-});
 
 const checkPermission = async () => {
   const status = await BarcodeScanner.checkPermission();
@@ -297,7 +295,7 @@ const obtenerCoordenadas = async (nombre: string) => {
     targetLatitude.value = firstItem.lat;
     targetLongitude.value = firstItem.long;
   } else {
-    console.error(respuesta.mensaje);
+    mostrarMensaje('Error', respuesta.mensaje);
     return;
   }
 };
@@ -309,7 +307,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <q-page padding class="page-container">
+  <q-page padding>
     <div class="sample-background">
       <!-- this background simulates the camera view -->
     </div>
@@ -342,9 +340,9 @@ onMounted(async () => {
     </div>
     <div class="row justify-center q-pt-lg">
       <div class="col text-center">
-        <div>
-          <span class="text-subtitle2 text-grey-9" v-if="!registrado">
-            {{ textInfo }}
+        <div v-if="showCamera">
+          <span class="text-subtitle2 text-grey-1" v-if="!registrado">
+            Posiciona el código QR en el centro de la pantalla
           </span>
         </div>
         <div v-if="!registrado">
@@ -380,5 +378,4 @@ onMounted(async () => {
 
 <style scoped lang="scss">
 @import '../css/registro.salida.scss';
-@import '../css/page.container.scss';
 </style>

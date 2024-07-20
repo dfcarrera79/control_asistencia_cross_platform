@@ -11,7 +11,9 @@ import { useAxios } from '../services/useAxios';
 import { DeviceId } from '../components/models';
 import { LocalStorage, useQuasar } from 'quasar';
 import { Geolocation } from '@capacitor/geolocation';
-import { obtenerDistancia } from '../utils/AppUtils';
+import { useMensajes } from '../services/useMensajes';
+import type { ObjectError } from '../components/models';
+import { obtenerDistancia, deducirMensajeError } from '../utils/AppUtils';
 import {
   NuevoHorario,
   RespuestaCoordenadas,
@@ -39,6 +41,7 @@ const checkSelfie = ref(false);
 const checkRegistro = ref(false);
 const authStore = useAuthStore();
 const { get, post } = useAxios();
+const { mostrarMensaje } = useMensajes();
 let currentTime = new Date().toLocaleTimeString();
 const newPos = ref({
   latitude: 0,
@@ -71,6 +74,22 @@ const getJornadaForToday = (schedules: NuevoHorario[]) => {
   });
 
   return nuevoHorario;
+};
+
+const updateButton = async () => {
+  registrado.value = false;
+  horario.value = (await obtenerHorarioEmpleado(
+    authStore.codigo,
+    currentMonth.value,
+    currentYear.value
+  )) || {
+    end: '',
+    time: '',
+    start: '',
+    title: '',
+    bgcolor: '',
+    details: '',
+  };
 };
 
 const obtenerHorarioEmpleado = async (
@@ -114,7 +133,7 @@ const registrarJornadas = async (id: number, jor: number) => {
 
 onMounted(async () => {
   const currentDate = new Date();
-  console.log('[CURRENT DATE]: ', currentDate);
+
   currentMonth.value = currentDate.getMonth() + 1;
   currentYear.value = currentDate.getFullYear();
   horario.value = (await obtenerHorarioEmpleado(
@@ -170,7 +189,7 @@ const subirFoto = async (file: File, code: number) => {
     });
     return respt;
   } catch (error) {
-    console.error('[ERROR AL SUBIR LA FOTO]:', error);
+    mostrarMensaje('Error al subir la foto:', error as string);
   }
 };
 
@@ -201,7 +220,7 @@ const takeSelfie = async () => {
       }
     }
   } catch (error) {
-    console.error('[ERROR AL TOMAR LA SELFIE] :', error);
+    deducirMensajeError(error as ObjectError);
   }
 };
 
@@ -249,7 +268,7 @@ const registrarEntrada = async (employee_id: number) => {
       timeout: 10000,
     });
   } catch (error) {
-    console.error('Error registrando las coordenadas:', error);
+    mostrarMensaje('Error registrando las coordenadas:', error as string);
   }
 };
 
@@ -285,12 +304,6 @@ const logDeviceInfo = async () => {
   const info: DeviceId = await Device.getId();
   return info.identifier;
 };
-
-const textInfo = computed(() => {
-  return showCamera.value
-    ? 'posiciona el código QR en el centro de la pantalla'
-    : 'Presiona el botón y escanea el código QR';
-});
 
 const checkPermission = async () => {
   const status = await BarcodeScanner.checkPermission();
@@ -404,7 +417,7 @@ const obtenerCoordenadas = async (nombre: string) => {
     targetLatitude.value = firstItem.lat;
     targetLongitude.value = firstItem.long;
   } else {
-    console.error(respuesta.mensaje);
+    mostrarMensaje('Error', respuesta.mensaje);
     return;
   }
 };
@@ -415,13 +428,14 @@ const jornadas = computed(() => {
 });
 
 onMounted(async () => {
+  stopScan();
   document.addEventListener('backbutton', onBackButton);
   id.value = await logDeviceInfo();
 });
 </script>
 
 <template>
-  <q-page padding class="page-container">
+  <q-page padding>
     <div class="sample-background">
       <!-- this background simulates the camera view -->
     </div>
@@ -442,12 +456,20 @@ onMounted(async () => {
       class="row text-uppercase text-grey-8 justify-center items-center content-center q-pa-md q-pb-xs q-mb-xs text-center"
       style="font-family: 'Bebas Neue'"
     >
-      <div>Registrar Entrada</div>
+      <div class="row no-wrap">
+        <span>Registrar Entrada</span>
+        <q-btn
+          flat
+          rounded
+          color="primary"
+          icon="update"
+          dense
+          @click="updateButton"
+        />
+      </div>
     </h4>
 
-    <!-- {{ jornada }} -->
-    <!-- <br /> -->
-    <div class="row justify-center text-center">
+    <div class="row justify-center text-center" v-if="!showCamera">
       {{ `Tu horario de trabajo para hoy (${horario.start}) es:` }}
       <br />
       <ul class="q-ma-xs" v-for="(jornada, index) in jornadas" :key="index">
@@ -465,9 +487,9 @@ onMounted(async () => {
     </div>
     <div class="row justify-center q-pt-lg">
       <div class="col text-center">
-        <div>
-          <span class="text-subtitle2 text-grey-9" v-if="!registrado">
-            {{ textInfo }}
+        <div v-if="showCamera">
+          <span class="text-subtitle2 text-grey-1" v-if="!registrado">
+            Posiciona el código QR en el centro de la pantalla
           </span>
         </div>
         <div v-if="!registrado">
@@ -503,5 +525,4 @@ onMounted(async () => {
 
 <style scoped lang="scss">
 @import '../css/registro.asistencia.scss';
-@import '../css/page.container.scss';
 </style>

@@ -5,6 +5,8 @@ import { useAuthStore } from '../stores/auth';
 import { Session } from '../components/models';
 import { useAxios } from '../services/useAxios';
 import { useMensajes } from '../services/useMensajes';
+import type { ObjectError } from '../components/models';
+import { deducirMensajeError } from '../utils/AppUtils';
 import { LocalStorage, Loading, QSpinnerFacebook, useQuasar } from 'quasar';
 
 const $q = useQuasar();
@@ -64,7 +66,6 @@ const logearse = async () => {
     spinner: QSpinnerFacebook,
     message: 'Verificando acceso...',
   });
-  console.log('[SE EJECUTA LOGEARSE]');
   const respuesta = await get('/validar_usuario', {
     id: id.value,
     clave: clave.value,
@@ -124,10 +125,6 @@ const logearse = async () => {
   router.push('/');
 };
 
-// const recuperarContraseña = () => {
-//   mostrarVentana.value = true;
-// };
-
 async function fetchEmail() {
   try {
     const respuesta = await get('/obtener_usuario', {
@@ -137,7 +134,7 @@ async function fetchEmail() {
     // Assuming the response data has a property 'email' containing the email address
     correoElectronico.value = respuesta.objetos;
   } catch (error) {
-    console.error('Error fetching email:', error);
+    deducirMensajeError(error as ObjectError);
   }
 }
 
@@ -159,7 +156,7 @@ const enviarCorreoRecuperacion = async () => {
     // Handle the response accordingly
     console.log(response);
   } catch (error) {
-    console.error('Error sending email:', error);
+    deducirMensajeError(error as ObjectError);
   }
 };
 </script>

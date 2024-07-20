@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { useQuasar, LocalStorage } from 'quasar';
 import { Device } from '@capacitor/device';
 import { useAuthStore } from '../stores/auth';
 import { computed, onMounted, ref } from 'vue';
 import { DeviceId } from '../components/models';
 import { useAxios } from '../services/useAxios';
+import { useQuasar, LocalStorage } from 'quasar';
+import { useMensajes } from '../services/useMensajes';
+import { deducirMensajeError } from '../utils/AppUtils';
+import type { ObjectError } from '../components/models';
 
 // Data
 const id = ref('');
@@ -13,6 +16,7 @@ const check = ref(false);
 const { get, post } = useAxios();
 const authStore = useAuthStore();
 const session = ref();
+const { mostrarMensaje } = useMensajes();
 
 // Methods
 const logDeviceInfo = async () => {
@@ -28,7 +32,7 @@ onMounted(async () => {
   if (respuesta.error === 'N') {
     check.value = true;
   } else {
-    console.error(respuesta.mensaje);
+    mostrarMensaje('Error', respuesta.mensaje);
     check.value = false;
   }
 });
@@ -57,7 +61,7 @@ const registrarDispositivo = async () => {
       message: response.mensaje,
     });
   } catch (error) {
-    console.error('Error registrando el dispositivo:', error);
+    deducirMensajeError(error as ObjectError);
   }
 };
 

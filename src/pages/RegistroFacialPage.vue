@@ -9,6 +9,8 @@ import {
 import { Session } from '../components/models';
 import { useAxios } from '../services/useAxios';
 import { LocalStorage, useQuasar } from 'quasar';
+import type { ObjectError } from '../components/models';
+import { deducirMensajeError } from '../utils/AppUtils';
 
 // Data
 const foto = ref();
@@ -47,7 +49,7 @@ const takeSelfie = async () => {
       }
     }
   } catch (error) {
-    console.error('[ERROR AL TOMAR LA SELFIE] :', error);
+    deducirMensajeError(error as ObjectError);
   }
 };
 
@@ -58,7 +60,7 @@ const subirFoto = async (file: File) => {
     const respt = await post('/subir_foto', {}, formData);
     return respt.objetos;
   } catch (error) {
-    console.error('[ERROR AL SUBIR LA FOTO]:', error);
+    deducirMensajeError(error as ObjectError);
   }
 };
 

@@ -40,6 +40,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: '',
         component: () => import('pages/PermisosPage.vue'),
+        beforeEnter: multiguard([estaLogeado]),
       },
     ],
   },
@@ -50,6 +51,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: '',
         component: () => import('pages/RegistroFacialPage.vue'),
+        beforeEnter: multiguard([estaLogeado]),
       },
     ],
   },
@@ -60,6 +62,18 @@ const routes: RouteRecordRaw[] = [
       {
         path: '',
         component: () => import('pages/RegistrarDispositivoPage.vue'),
+        beforeEnter: multiguard([estaLogeado]),
+      },
+    ],
+  },
+  {
+    path: '/vacaciones',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        component: () => import('pages/VacacionesPage.vue'),
+        beforeEnter: multiguard([estaLogeado]),
       },
     ],
   },
@@ -67,14 +81,22 @@ const routes: RouteRecordRaw[] = [
     path: '/registro_asistencia',
     component: () => import('layouts/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/RegistroAsistenciaPage.vue') },
+      {
+        path: '',
+        component: () => import('pages/RegistroAsistenciaPage.vue'),
+        beforeEnter: multiguard([estaLogeado]),
+      },
     ],
   },
   {
     path: '/registro_salida',
     component: () => import('layouts/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/RegistroSalidaPage.vue') },
+      {
+        path: '',
+        component: () => import('pages/RegistroSalidaPage.vue'),
+        beforeEnter: multiguard([estaLogeado]),
+      },
     ],
   },
   {
@@ -84,6 +106,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: '',
         component: () => import('pages/RegistrarEntradaSalidaPage.vue'),
+        beforeEnter: multiguard([estaLogeado]),
       },
     ],
   },
@@ -94,6 +117,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: '',
         component: () => import('pages/RegistrarClientePage.vue'),
+        beforeEnter: multiguard([estaLogeado]),
       },
     ],
   },
@@ -104,6 +128,18 @@ const routes: RouteRecordRaw[] = [
       {
         path: '',
         component: () => import('pages/RutasPage.vue'),
+        beforeEnter: multiguard([estaLogeado]),
+      },
+    ],
+  },
+  {
+    path: '/cambiar_clave',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        component: () => import('pages/CambiarClavePage.vue'),
+        beforeEnter: multiguard([estaLogeado]),
       },
     ],
   },
