@@ -166,7 +166,7 @@ function toggleLeftDrawer() {
             </q-item-section>
           </q-item>
 
-          <q-item
+          <!-- <q-item
             clickable
             v-ripple
             to="/registro_asistencia"
@@ -187,9 +187,9 @@ function toggleLeftDrawer() {
                 REGISTRAR ENTRADA
               </span>
             </q-item-section>
-          </q-item>
+          </q-item> -->
 
-          <q-item
+          <!-- <q-item
             clickable
             v-ripple
             to="/registro_salida"
@@ -210,7 +210,7 @@ function toggleLeftDrawer() {
                 REGISTRAR SALIDA
               </span>
             </q-item-section>
-          </q-item>
+          </q-item> -->
 
           <q-item
             clickable
@@ -234,7 +234,7 @@ function toggleLeftDrawer() {
             </q-item-section>
           </q-item>
 
-          <q-item
+          <!-- <q-item
             clickable
             v-ripple
             to="/registrar_cliente"
@@ -254,9 +254,9 @@ function toggleLeftDrawer() {
                 Registrar Cliente
               </span>
             </q-item-section>
-          </q-item>
+          </q-item> -->
 
-          <q-item clickable v-ripple to="/rutas" active-class="my-menu-link">
+          <!-- <q-item clickable v-ripple to="/rutas" active-class="my-menu-link">
             <q-item-section avatar>
               <div class="row">
                 <q-icon size="1.5em" name="alt_route" color="grey-9" />
@@ -271,7 +271,8 @@ function toggleLeftDrawer() {
                 Rutas
               </span>
             </q-item-section>
-          </q-item>
+          </q-item> -->
+
           <q-item
             clickable
             v-ripple

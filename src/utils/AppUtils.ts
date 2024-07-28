@@ -1,5 +1,5 @@
 import moment from 'moment';
-import type { ObjectError } from '../components/models';
+import type { ObjectError, NuevoHorario } from '../components/models';
 
 export function deducirMensajeError(o_error: ObjectError) {
   let mensaje = '';
@@ -91,5 +91,81 @@ function formatoFechas(
     return fechaInicial.format('DD/MM/YY');
   } else {
     return `${fechaInicial.format('DD')} - ${fechaFinal.format('DD/MM/YY')}`;
+  }
+}
+
+export function isCurrentTimeGreaterThanTime(
+  horario: NuevoHorario,
+  currentDate: Date
+): number {
+  // Obtener la hora actual
+  const currentHour = currentDate.getHours();
+  const currentMinutes = currentDate.getMinutes();
+
+  // Convertir la hora actual en minutos
+  const currentTimeInMinutes = currentHour * 60 + currentMinutes;
+
+  // Extraer la hora de "title" en horario
+  const horarioTitleTime = horario.title.split(' ')[1]; // "12:00"
+  const [titleHour, titleMinutes] = horarioTitleTime.split(':').map(Number);
+  const titleTimeInMinutes = titleHour * 60 + titleMinutes;
+
+  // Verificar si "time" está vacío
+  if (!horario.time) {
+    if (currentTimeInMinutes > titleTimeInMinutes) {
+      return 1;
+    } else {
+      return 2;
+    }
+  } else {
+    // Extraer la hora de "time" en horario
+    const horarioEndTime = horario.time.split(' ')[1]; // "18:00"
+    const [endHour, endMinutes] = horarioEndTime.split(':').map(Number);
+    const endTimeInMinutes = endHour * 60 + endMinutes;
+
+    if (
+      currentTimeInMinutes > titleTimeInMinutes &&
+      currentTimeInMinutes <= endTimeInMinutes
+    ) {
+      return 1;
+    } else if (currentTimeInMinutes > endTimeInMinutes) {
+      return 2;
+    }
+  }
+  return 2; // Valor por defecto si no cumple ninguna condición
+}
+
+export function isCurrentTimeGreaterThanTitle(
+  horario: NuevoHorario,
+  currentDate: Date
+) {
+  // Obtener la hora actual
+  const currentHour = currentDate.getHours();
+  const currentMinutes = currentDate.getMinutes();
+
+  // Convertir la hora actual en minutos
+  const currentTimeInMinutes = currentHour * 60 + currentMinutes;
+
+  // Extraer la hora de "title" en horario
+  const horarioTitleTime = horario.title.split(' ')[1]; // "12:00"
+  const [titleHour, titleMinutes] = horarioTitleTime.split(':').map(Number);
+  const titleTimeInMinutes = titleHour * 60 + titleMinutes;
+
+  // Verificar si "time" está vacío
+  if (!horario.time) {
+    if (currentTimeInMinutes > titleTimeInMinutes) {
+      return 2;
+    } else {
+      return 1;
+    }
+  }
+}
+
+export function determinarNumeroDeJornadas(details: string): number {
+  // Verificar si el campo 'details' contiene el carácter '-'
+  if (details.includes('-')) {
+    return 2; // Dos jornadas
+  } else {
+    return 1; // Una jornada
   }
 }

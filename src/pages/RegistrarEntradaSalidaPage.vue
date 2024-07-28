@@ -13,14 +13,30 @@ import { LocalStorage, useQuasar } from 'quasar';
 import { Geolocation } from '@capacitor/geolocation';
 import { useMensajes } from '../services/useMensajes';
 import type { ObjectError } from '../components/models';
-import { obtenerDistancia, deducirMensajeError } from '../utils/AppUtils';
+import { columnasAsistencias } from '../components/columns';
+import {
+  obtenerDistancia,
+  deducirMensajeError,
+  determinarNumeroDeJornadas,
+  isCurrentTimeGreaterThanTime,
+  isCurrentTimeGreaterThanTitle,
+} from '../utils/AppUtils';
 import {
   NuevoHorario,
+  EntradasRegistradas,
   RespuestaCoordenadas,
   RespuestaHorarioEmpleado,
+  ObjetoEntradasRegistradas,
   Session,
 } from '../components/models';
-import { computed, onDeactivated, onBeforeUnmount, ref, onMounted } from 'vue';
+import {
+  computed,
+  onDeactivated,
+  onBeforeUnmount,
+  ref,
+  onMounted,
+  watch,
+} from 'vue';
 import {
   BarcodeScanner,
   ScanResult,
@@ -32,6 +48,7 @@ const foto = ref();
 const hora = ref('');
 const text = ref('');
 const codigo = ref(0);
+const filas = ref<ObjetoEntradasRegistradas[]>([]);
 const $q = useQuasar();
 const check = ref(false);
 const resultado = ref('');
@@ -40,7 +57,8 @@ const showCamera = ref(false);
 const checkSelfie = ref(false);
 const checkRegistro = ref(false);
 const authStore = useAuthStore();
-const { get, post } = useAxios();
+const columnas = columnasAsistencias;
+const { get, post, put } = useAxios();
 const { mostrarMensaje } = useMensajes();
 let currentTime = new Date().toLocaleTimeString();
 const newPos = ref({
@@ -48,9 +66,12 @@ const newPos = ref({
   longitude: 0,
   timestamp: 0,
 });
+const registradoFinal = ref(false);
 
+const numeroJornadas = ref(0);
 const currentMonth = ref(0);
 const currentYear = ref(0);
+const entrada = ref(false);
 
 const horario = ref({
   end: '',
@@ -72,7 +93,6 @@ const getJornadaForToday = (schedules: NuevoHorario[]) => {
       nuevoHorario = schedule;
     }
   });
-
   return nuevoHorario;
 };
 
@@ -114,26 +134,84 @@ const obtenerHorarioEmpleado = async (
   }
 };
 
-const registrarJornadas = async (id: number, jor: number) => {
-  let response;
+interface EntradaObject {
+  error: string;
+  mensaje: string;
+  objetos: ObjetoEntrada[];
+}
 
-  response = await post(
-    '/registrar_jornadas',
-    {},
-    JSON.parse(
-      JSON.stringify({
-        employee_id: id,
-        jornada: jor,
-      })
-    )
-  );
+interface ObjetoEntrada {
+  codigo: number;
+  jornada: number;
+}
 
-  return response;
+interface SalidaObject {
+  error: string;
+  mensaje: string;
+  objetos: Objeto[];
+}
+
+interface Objeto {
+  codigo: number;
+}
+
+const obtenerAsistenciasFecha = async (codigo: number, fecha: string) => {
+  try {
+    const asistencias: EntradasRegistradas = await get(
+      '/obtener_asistencias_por_fecha',
+      {
+        codigo,
+        fecha,
+      }
+    );
+    filas.value = asistencias.objetos;
+  } catch (error) {
+    deducirMensajeError(error as ObjectError);
+    return null;
+  }
+};
+
+const obtenerEntradaRegistrada = async (codigo: number, fecha: string) => {
+  try {
+    const entrada: EntradaObject = await get('/obtener_entrada_registrada', {
+      codigo,
+      fecha,
+    });
+
+    if (entrada.error === 'N') {
+      if (entrada.objetos.length > 0) {
+        numeroJornadas.value = entrada.objetos[0].jornada;
+      }
+    }
+
+    return entrada.objetos;
+  } catch (error) {
+    deducirMensajeError(error as ObjectError);
+    return null;
+  }
+};
+
+const obtenerSalidaRegistrada = async (
+  codigo: number,
+  fecha: string,
+  jornada: number
+) => {
+  try {
+    const salida: SalidaObject = await get('/obtener_salida_registrada', {
+      codigo,
+      fecha,
+      jornada,
+    });
+    return salida.objetos;
+  } catch (error) {
+    // console.error('Error obteniendo salida registrada:', error);
+    deducirMensajeError(error as ObjectError);
+    return null;
+  }
 };
 
 onMounted(async () => {
   const currentDate = new Date();
-
   currentMonth.value = currentDate.getMonth() + 1;
   currentYear.value = currentDate.getFullYear();
   horario.value = (await obtenerHorarioEmpleado(
@@ -149,21 +227,101 @@ onMounted(async () => {
     details: '',
   };
 
-  let asistencia;
-  asistencia = await get('/obtener_entrada_registrada', {
-    codigo: 84,
-    fecha: currentDate,
-  });
+  const ent = await obtenerEntradaRegistrada(
+    authStore.codigo,
+    horario.value.start
+  );
 
-  console.log('[ASISTENCIA]: ', JSON.stringify(asistencia));
+  const jornadas = determinarNumeroDeJornadas(horario.value.details);
 
-  if (asistencia.objetos.length !== 0) {
-  } else {
-    console.log('No hay asistencia registrada');
-    for (let i = 1; i <= jornada.value; i++) {
-      await registrarJornadas(84, i);
+  if (jornadas == 2) {
+    let si_no = isCurrentTimeGreaterThanTime(horario.value, currentDate);
+    if (ent?.length == 0) {
+      numeroJornadas.value = 1;
+
+      if (si_no == 1) {
+        numeroJornadas.value = 2;
+      }
+
+      if (si_no == 2) {
+        registradoFinal.value = true;
+        return;
+      }
+
+      entrada.value = true;
+    } else if (ent?.length == 1) {
+      const salida = await obtenerSalidaRegistrada(
+        authStore.codigo,
+        horario.value.start,
+        numeroJornadas.value
+      );
+
+      if (salida?.length == 0) {
+        // numeroJornadas.value = 1;
+        entrada.value = false;
+      } else if (salida?.length == 1) {
+        numeroJornadas.value = 2;
+        entrada.value = true;
+
+        if (ent[0].jornada == 2) {
+          numeroJornadas.value = 2;
+          registradoFinal.value = true;
+        }
+      }
+    } else if (ent?.length == 2) {
+      const salida = await obtenerSalidaRegistrada(
+        authStore.codigo,
+        horario.value.start,
+        2
+      );
+      if (salida?.length == 0) {
+        entrada.value = false;
+        numeroJornadas.value = 2;
+        registradoFinal.value = true;
+      }
     }
   }
+
+  if (jornadas == 1) {
+    let si_no = isCurrentTimeGreaterThanTitle(horario.value, currentDate);
+    if (ent?.length == 0) {
+      numeroJornadas.value = 1;
+
+      if (si_no == 1) {
+        numeroJornadas.value = 1;
+      }
+
+      if (si_no == 2) {
+        registradoFinal.value = true;
+        return;
+      }
+    }
+
+    if (ent?.length == 1) {
+      const salida = await obtenerSalidaRegistrada(
+        authStore.codigo,
+        horario.value.start,
+        numeroJornadas.value
+      );
+
+      if (salida?.length == 0) {
+        entrada.value = false;
+      } else if (salida?.length == 1) {
+        registradoFinal.value = true;
+        return;
+      }
+    }
+  }
+});
+
+watch(registradoFinal, () => {
+  if (registradoFinal.value) {
+    obtenerAsistenciasFecha(authStore.codigo, horario.value.start);
+  }
+});
+
+const titulo = computed(() => {
+  return entrada.value ? 'Entrada' : 'Salida';
 });
 
 // Methods
@@ -178,8 +336,6 @@ const subirFoto = async (file: File, code: number) => {
     formData.append('file', file);
     const newQuery = `/comparar_fotos/${code}`;
     const respt = await post(newQuery, {}, formData);
-
-    // Handle the response accordingly
     $q.notify({
       color: respt.error === 'N' ? 'green-4' : 'red-5',
       textColor: 'white',
@@ -243,7 +399,7 @@ const verificarDispositivo = async () => {
   }
 };
 
-const registrarEntrada = async (employee_id: number) => {
+const registrarEntrada = async (employee_id: number, turn: number) => {
   try {
     const response = await post(
       '/registrar_entrada',
@@ -251,6 +407,7 @@ const registrarEntrada = async (employee_id: number) => {
       JSON.parse(
         JSON.stringify({
           employee_id: employee_id,
+          jornada: turn,
         })
       )
     );
@@ -259,7 +416,6 @@ const registrarEntrada = async (employee_id: number) => {
       checkRegistro.value = true;
       text.value = "Registro de entrada: '" + currentTime + "'";
     }
-    // Handle the response accordingly
     $q.notify({
       color: response.error === 'N' ? 'green-4' : 'red-5',
       textColor: 'white',
@@ -268,7 +424,36 @@ const registrarEntrada = async (employee_id: number) => {
       timeout: 10000,
     });
   } catch (error) {
-    mostrarMensaje('Error registrando las coordenadas:', error as string);
+    deducirMensajeError(error as ObjectError);
+  }
+};
+
+const registrarSalida = async (employee_id: number, turn: number) => {
+  try {
+    const response = await put(
+      '/registrar_salida',
+      {},
+      JSON.parse(
+        JSON.stringify({
+          employee_id: employee_id,
+          jornada: turn,
+        })
+      )
+    );
+
+    if (response.error === 'N') {
+      checkRegistro.value = true;
+      text.value = "Registro de salida: '" + currentTime + "'";
+    }
+    $q.notify({
+      color: response.error === 'N' ? 'green-4' : 'red-5',
+      textColor: 'white',
+      icon: response.error === 'N' ? 'cloud_done' : 'warning',
+      message: response.mensaje,
+      timeout: 10000,
+    });
+  } catch (error) {
+    deducirMensajeError(error as ObjectError);
   }
 };
 
@@ -365,7 +550,12 @@ const startScan = async () => {
       checkSelfie.value = await takeSelfie();
 
       if (checkSelfie.value === true) {
-        await registrarEntrada(codigo.value);
+        if (entrada.value) {
+          await registrarEntrada(codigo.value, numeroJornadas.value);
+        } else {
+          await registrarSalida(codigo.value, numeroJornadas.value);
+        }
+        // await registrarEntrada(codigo.value, numeroJornadas.value);
         if (checkRegistro.value == true) {
           hora.value = new Date().toLocaleTimeString();
           registrado.value = true;
@@ -457,7 +647,10 @@ onMounted(async () => {
       style="font-family: 'Bebas Neue'"
     >
       <div class="row no-wrap">
-        <span>Registrar Entrada</span>
+        <span v-if="registradoFinal">
+          Entradas y salidas de hoy registradas
+        </span>
+        <span v-if="!registradoFinal"> Registrar {{ titulo }}</span>
         <q-btn
           flat
           rounded
@@ -470,15 +663,29 @@ onMounted(async () => {
     </h4>
 
     <div class="row justify-center text-center" v-if="!showCamera">
-      {{ `Tu horario de trabajo para hoy (${horario.start}) es:` }}
+      {{ numeroJornadas }}
       <br />
-      <ul class="q-ma-xs" v-for="(jornada, index) in jornadas" :key="index">
-        <li>Jornada {{ index + 1 }}: {{ jornada }}</li>
-      </ul>
+      {{
+        `Jornada en la que va a registrar su entrada/salida para hoy (${horario.start}):`
+      }}
+      <br />
+      <q-radio
+        v-model="numeroJornadas"
+        v-for="(jornada, index) in jornadas"
+        :key="index"
+        checked-icon="task_alt"
+        unchecked-icon="panorama_fish_eye"
+        disable
+        :val="index + 1"
+        :label="`Jornada ${index + 1}: ${jornada}`"
+      />
     </div>
 
     <div class="column justify-center items-center content-center">
-      <div v-if="!showCamera && !registrado" class="col-12 text-center q-pt-md">
+      <div
+        v-if="!showCamera && !registrado && !registradoFinal"
+        class="col-12 text-center q-pt-md"
+      >
         <img alt="QR code" src="../assets/logo.jpg" style="width: 340px" />
       </div>
       <div v-if="registrado" class="col-12">
@@ -492,7 +699,7 @@ onMounted(async () => {
             Posiciona el código QR en el centro de la pantalla
           </span>
         </div>
-        <div v-if="!registrado">
+        <div v-if="!registrado && !registradoFinal">
           <q-btn
             color="primary"
             rounded
@@ -519,6 +726,20 @@ onMounted(async () => {
           <strong>Lugar de trabajo: </strong> {{ resultado }}
         </q-card-section>
       </q-card>
+    </div>
+
+    <div>
+      <q-table
+        flat
+        bordered
+        hide-bottom
+        :rows="filas"
+        hide-pagination
+        row-key="codigo"
+        :columns="columnas"
+        :visible-columns="['entrada', 'salida']"
+      >
+      </q-table>
     </div>
   </q-page>
 </template>

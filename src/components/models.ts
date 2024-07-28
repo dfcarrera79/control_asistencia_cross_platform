@@ -133,3 +133,15 @@ export interface RespuestaHorarioEmpleado {
   mensaje: string;
   objetos: HorarioObject[];
 }
+
+export interface EntradasRegistradas {
+  error: string;
+  mensaje: string;
+  objetos: ObjetoEntradasRegistradas[];
+}
+
+export interface ObjetoEntradasRegistradas {
+  codigo: number;
+  entrada: string;
+  salida: string;
+}
