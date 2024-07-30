@@ -145,3 +145,24 @@ export interface ObjetoEntradasRegistradas {
   entrada: string;
   salida: string;
 }
+
+export interface EntradaObject {
+  error: string;
+  mensaje: string;
+  objetos: ObjetoEntrada[];
+}
+
+interface ObjetoEntrada {
+  codigo: number;
+  jornada: number;
+}
+
+export interface SalidaObject {
+  error: string;
+  mensaje: string;
+  objetos: ObjetoSalida[];
+}
+
+interface ObjetoSalida {
+  codigo: number;
+}

@@ -1,18 +1,19 @@
 <script setup lang="ts">
 import {
   Camera,
-  CameraResultType,
   CameraSource,
   CameraDirection,
+  CameraResultType,
 } from '@capacitor/camera';
 import { Device } from '@capacitor/device';
 import { useAuthStore } from '../stores/auth';
 import { useAxios } from '../services/useAxios';
 import { DeviceId } from '../components/models';
 import { LocalStorage, useQuasar } from 'quasar';
+import { fetchHorario, obtenerSalidaRegistrada } from '../services/useHorarios';
 import { Geolocation } from '@capacitor/geolocation';
 import { useMensajes } from '../services/useMensajes';
-import type { ObjectError } from '../components/models';
+import type { NuevoHorario, ObjectError } from '../components/models';
 import { columnasAsistencias } from '../components/columns';
 import {
   obtenerDistancia,
@@ -22,12 +23,11 @@ import {
   isCurrentTimeGreaterThanTitle,
 } from '../utils/AppUtils';
 import {
-  NuevoHorario,
+  Session,
+  EntradaObject,
   EntradasRegistradas,
   RespuestaCoordenadas,
-  RespuestaHorarioEmpleado,
   ObjetoEntradasRegistradas,
-  Session,
 } from '../components/models';
 import {
   computed,
@@ -48,6 +48,7 @@ const foto = ref();
 const hora = ref('');
 const text = ref('');
 const codigo = ref(0);
+const sinHorarios = ref(false);
 const filas = ref<ObjetoEntradasRegistradas[]>([]);
 const $q = useQuasar();
 const check = ref(false);
@@ -66,94 +67,20 @@ const newPos = ref({
   longitude: 0,
   timestamp: 0,
 });
+const mostrarRegistros = ref(false);
 const registradoFinal = ref(false);
 
 const numeroJornadas = ref(0);
 const currentMonth = ref(0);
 const currentYear = ref(0);
 const entrada = ref(false);
-
-const horario = ref({
-  end: '',
-  time: '',
-  start: '',
-  title: '',
-  bgcolor: '',
-  details: '',
-});
-const jornada = ref(0);
-
-const getJornadaForToday = (schedules: NuevoHorario[]) => {
-  // const today = new Date().toISOString().split('T')[0];
-  const today = new Date().toLocaleDateString('en-CA');
-  let nuevoHorario = null;
-  schedules.forEach((schedule) => {
-    if (schedule.start === today) {
-      jornada.value = schedule.time === '' ? 1 : 2;
-      nuevoHorario = schedule;
-    }
-  });
-  return nuevoHorario;
-};
+const horario = ref<NuevoHorario | null>(null);
 
 const updateButton = async () => {
   registrado.value = false;
-  horario.value = (await obtenerHorarioEmpleado(
-    authStore.codigo,
-    currentMonth.value,
-    currentYear.value
-  )) || {
-    end: '',
-    time: '',
-    start: '',
-    title: '',
-    bgcolor: '',
-    details: '',
-  };
+  horario.value = await fetchHorario();
+  location.reload();
 };
-
-const obtenerHorarioEmpleado = async (
-  code: number,
-  month: number,
-  year: number
-) => {
-  const respuesta: RespuestaHorarioEmpleado = await get(
-    '/obtener_horario_empleado',
-    {
-      codigo: code,
-      mes: month,
-      anio: year,
-    }
-  );
-  if (respuesta.error === 'S') {
-    return null;
-  }
-
-  if (respuesta.error === 'N') {
-    return getJornadaForToday(respuesta.objetos[0].horario);
-  }
-};
-
-interface EntradaObject {
-  error: string;
-  mensaje: string;
-  objetos: ObjetoEntrada[];
-}
-
-interface ObjetoEntrada {
-  codigo: number;
-  jornada: number;
-}
-
-interface SalidaObject {
-  error: string;
-  mensaje: string;
-  objetos: Objeto[];
-}
-
-interface Objeto {
-  codigo: number;
-}
 
 const obtenerAsistenciasFecha = async (codigo: number, fecha: string) => {
   try {
@@ -191,131 +118,114 @@ const obtenerEntradaRegistrada = async (codigo: number, fecha: string) => {
   }
 };
 
-const obtenerSalidaRegistrada = async (
-  codigo: number,
-  fecha: string,
-  jornada: number
-) => {
-  try {
-    const salida: SalidaObject = await get('/obtener_salida_registrada', {
-      codigo,
-      fecha,
-      jornada,
-    });
-    return salida.objetos;
-  } catch (error) {
-    // console.error('Error obteniendo salida registrada:', error);
-    deducirMensajeError(error as ObjectError);
-    return null;
-  }
-};
-
 onMounted(async () => {
   const currentDate = new Date();
   currentMonth.value = currentDate.getMonth() + 1;
   currentYear.value = currentDate.getFullYear();
-  horario.value = (await obtenerHorarioEmpleado(
-    authStore.codigo,
-    currentMonth.value,
-    currentYear.value
-  )) || {
-    end: '',
-    time: '',
-    start: '',
-    title: '',
-    bgcolor: '',
-    details: '',
-  };
+  horario.value = await fetchHorario();
 
-  const ent = await obtenerEntradaRegistrada(
-    authStore.codigo,
-    horario.value.start
-  );
+  if (horario.value == null) {
+    sinHorarios.value = true;
+    return;
+  }
 
-  const jornadas = determinarNumeroDeJornadas(horario.value.details);
+  if (horario.value) {
+    const ent = await obtenerEntradaRegistrada(
+      authStore.codigo,
+      horario.value.start
+    );
 
-  if (jornadas == 2) {
-    let si_no = isCurrentTimeGreaterThanTime(horario.value, currentDate);
-    if (ent?.length == 0) {
-      numeroJornadas.value = 1;
+    const jornadas = determinarNumeroDeJornadas(horario.value.details);
 
-      if (si_no == 1) {
-        numeroJornadas.value = 2;
-      }
+    if (jornadas == 2) {
+      let si_no = isCurrentTimeGreaterThanTime(horario.value, currentDate);
+      if (ent?.length == 0) {
+        numeroJornadas.value = 1;
 
-      if (si_no == 2) {
-        registradoFinal.value = true;
-        return;
-      }
+        if (si_no == 1) {
+          numeroJornadas.value = 2;
+        }
 
-      entrada.value = true;
-    } else if (ent?.length == 1) {
-      const salida = await obtenerSalidaRegistrada(
-        authStore.codigo,
-        horario.value.start,
-        numeroJornadas.value
-      );
+        if (si_no == 2) {
+          registradoFinal.value = true;
+          return;
+        }
 
-      if (salida?.length == 0) {
-        // numeroJornadas.value = 1;
-        entrada.value = false;
-      } else if (salida?.length == 1) {
-        numeroJornadas.value = 2;
         entrada.value = true;
+      } else if (ent?.length == 1) {
+        const salida = await obtenerSalidaRegistrada(
+          authStore.codigo,
+          horario.value.start,
+          numeroJornadas.value
+        );
 
-        if (ent[0].jornada == 2) {
+        if (salida?.length == 0) {
+          // numeroJornadas.value = 1;
+          entrada.value = false;
+        } else if (salida?.length == 1) {
+          numeroJornadas.value = 2;
+          entrada.value = true;
+
+          if (ent[0].jornada == 2) {
+            numeroJornadas.value = 2;
+            registradoFinal.value = true;
+          }
+        }
+      } else if (ent?.length == 2) {
+        const salida = await obtenerSalidaRegistrada(
+          authStore.codigo,
+          horario.value.start,
+          2
+        );
+        if (salida?.length == 0) {
+          entrada.value = false;
           numeroJornadas.value = 2;
           registradoFinal.value = true;
         }
       }
-    } else if (ent?.length == 2) {
-      const salida = await obtenerSalidaRegistrada(
-        authStore.codigo,
-        horario.value.start,
-        2
-      );
-      if (salida?.length == 0) {
-        entrada.value = false;
-        numeroJornadas.value = 2;
-        registradoFinal.value = true;
-      }
     }
-  }
 
-  if (jornadas == 1) {
-    let si_no = isCurrentTimeGreaterThanTitle(horario.value, currentDate);
-    if (ent?.length == 0) {
-      numeroJornadas.value = 1;
-
-      if (si_no == 1) {
+    if (jornadas == 1) {
+      let si_no = isCurrentTimeGreaterThanTitle(horario.value, currentDate);
+      if (ent?.length == 0) {
         numeroJornadas.value = 1;
+
+        if (si_no == 1) {
+          numeroJornadas.value = 1;
+        }
+
+        if (si_no == 2) {
+          registradoFinal.value = true;
+          return;
+        }
       }
 
-      if (si_no == 2) {
-        registradoFinal.value = true;
-        return;
-      }
-    }
+      if (ent?.length == 1) {
+        const salida = await obtenerSalidaRegistrada(
+          authStore.codigo,
+          horario.value.start,
+          numeroJornadas.value
+        );
 
-    if (ent?.length == 1) {
-      const salida = await obtenerSalidaRegistrada(
-        authStore.codigo,
-        horario.value.start,
-        numeroJornadas.value
-      );
-
-      if (salida?.length == 0) {
-        entrada.value = false;
-      } else if (salida?.length == 1) {
-        registradoFinal.value = true;
-        return;
+        if (salida?.length == 0) {
+          entrada.value = false;
+        } else if (salida?.length == 1) {
+          registradoFinal.value = true;
+          return;
+        }
       }
     }
   }
 });
 
 watch(registradoFinal, () => {
-  if (registradoFinal.value) {
+  if (registradoFinal.value && horario.value != null) {
+    obtenerAsistenciasFecha(authStore.codigo, horario.value.start);
+  }
+});
+
+watch(mostrarRegistros, () => {
+  if (horario.value != null) {
     obtenerAsistenciasFecha(authStore.codigo, horario.value.start);
   }
 });
@@ -341,7 +251,7 @@ const subirFoto = async (file: File, code: number) => {
       textColor: 'white',
       icon: respt.error === 'N' ? 'cloud_done' : 'warning',
       message: respt.mensaje,
-      timeout: 10000,
+      timeout: 2000,
     });
     return respt;
   } catch (error) {
@@ -393,7 +303,7 @@ const verificarDispositivo = async () => {
       textColor: 'white',
       icon: 'warning',
       message: '¡No se encuentra el dispositivo registrado en el sistema!',
-      timeout: 10000,
+      timeout: 2000,
     });
     check.value = false;
   }
@@ -421,7 +331,7 @@ const registrarEntrada = async (employee_id: number, turn: number) => {
       textColor: 'white',
       icon: response.error === 'N' ? 'cloud_done' : 'warning',
       message: response.mensaje,
-      timeout: 10000,
+      timeout: 2000,
     });
   } catch (error) {
     deducirMensajeError(error as ObjectError);
@@ -450,7 +360,7 @@ const registrarSalida = async (employee_id: number, turn: number) => {
       textColor: 'white',
       icon: response.error === 'N' ? 'cloud_done' : 'warning',
       message: response.mensaje,
-      timeout: 10000,
+      timeout: 2000,
     });
   } catch (error) {
     deducirMensajeError(error as ObjectError);
@@ -552,8 +462,15 @@ const startScan = async () => {
       if (checkSelfie.value === true) {
         if (entrada.value) {
           await registrarEntrada(codigo.value, numeroJornadas.value);
+
+          setTimeout(() => {
+            location.reload();
+          }, 7000);
         } else {
           await registrarSalida(codigo.value, numeroJornadas.value);
+          setTimeout(() => {
+            location.reload();
+          }, 7000);
         }
         // await registrarEntrada(codigo.value, numeroJornadas.value);
         if (checkRegistro.value == true) {
@@ -573,7 +490,7 @@ const startScan = async () => {
         distance.value <= maxDistance
           ? 'El dispositivo está dentro del rango especificado.'
           : 'El dispositivo está fuera del rango especificado.',
-      timeout: 10000,
+      timeout: 2000,
     });
   }
 };
@@ -613,8 +530,11 @@ const obtenerCoordenadas = async (nombre: string) => {
 };
 
 const jornadas = computed(() => {
-  const input = horario.value.details;
-  return input ? input.split(' - ') : [];
+  if (horario.value) {
+    const input = horario.value.details;
+    return input ? input.split(' - ') : [];
+  }
+  return [];
 });
 
 onMounted(async () => {
@@ -647,10 +567,13 @@ onMounted(async () => {
       style="font-family: 'Bebas Neue'"
     >
       <div class="row no-wrap">
-        <span v-if="registradoFinal">
-          Entradas y salidas de hoy registradas
+        <span v-if="sinHorarios"> No tiene un horario asignado para hoy </span>
+        <span v-if="registradoFinal && !sinHorarios">
+          Entradas y salidas registradas hoy
         </span>
-        <span v-if="!registradoFinal"> Registrar {{ titulo }}</span>
+        <span v-if="!registradoFinal && !sinHorarios">
+          Registrar {{ titulo }}</span
+        >
         <q-btn
           flat
           rounded
@@ -661,8 +584,25 @@ onMounted(async () => {
         />
       </div>
     </h4>
+    <div v-if="horario && !registradoFinal">
+      <q-toggle
+        v-model="mostrarRegistros"
+        icon="alarm"
+        label="Ver registros de hoy"
+        :disable="registradoFinal"
+      />
+    </div>
 
-    <div class="row justify-center text-center" v-if="!showCamera">
+    <div
+      class="row justify-center text-center"
+      v-if="
+        !showCamera &&
+        horario &&
+        !sinHorarios &&
+        !registradoFinal &&
+        !mostrarRegistros
+      "
+    >
       {{ numeroJornadas }}
       <br />
       {{
@@ -683,7 +623,13 @@ onMounted(async () => {
 
     <div class="column justify-center items-center content-center">
       <div
-        v-if="!showCamera && !registrado && !registradoFinal"
+        v-if="
+          !showCamera &&
+          !registrado &&
+          !registradoFinal &&
+          !sinHorarios &&
+          !mostrarRegistros
+        "
         class="col-12 text-center q-pt-md"
       >
         <img alt="QR code" src="../assets/logo.jpg" style="width: 340px" />
@@ -699,7 +645,7 @@ onMounted(async () => {
             Posiciona el código QR en el centro de la pantalla
           </span>
         </div>
-        <div v-if="!registrado && !registradoFinal">
+        <div v-if="!registrado && !registradoFinal && !mostrarRegistros">
           <q-btn
             color="primary"
             rounded
@@ -727,8 +673,7 @@ onMounted(async () => {
         </q-card-section>
       </q-card>
     </div>
-
-    <div>
+    <div v-if="registradoFinal || mostrarRegistros">
       <q-table
         flat
         bordered

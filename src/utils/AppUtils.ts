@@ -106,39 +106,28 @@ export function isCurrentTimeGreaterThanTime(
   const currentTimeInMinutes = currentHour * 60 + currentMinutes;
 
   // Extraer la hora de "title" en horario
-  const horarioTitleTime = horario.title.split(' ')[1]; // "12:00"
+  const horarioTitleTime = horario.title.split(' ')[1];
   const [titleHour, titleMinutes] = horarioTitleTime.split(':').map(Number);
   const titleTimeInMinutes = titleHour * 60 + titleMinutes;
-
-  // Verificar si "time" está vacío
-  if (!horario.time) {
-    if (currentTimeInMinutes > titleTimeInMinutes) {
-      return 1;
-    } else {
-      return 2;
-    }
+  const horarioEndTime = horario.time.split(' ')[1];
+  const [endHour, endMinutes] = horarioEndTime.split(':').map(Number);
+  const endTimeInMinutes = endHour * 60 + endMinutes;
+  if (
+    currentTimeInMinutes > titleTimeInMinutes &&
+    currentTimeInMinutes <= endTimeInMinutes
+  ) {
+    return 1;
+  } else if (currentTimeInMinutes > endTimeInMinutes) {
+    return 2;
   } else {
-    // Extraer la hora de "time" en horario
-    const horarioEndTime = horario.time.split(' ')[1]; // "18:00"
-    const [endHour, endMinutes] = horarioEndTime.split(':').map(Number);
-    const endTimeInMinutes = endHour * 60 + endMinutes;
-
-    if (
-      currentTimeInMinutes > titleTimeInMinutes &&
-      currentTimeInMinutes <= endTimeInMinutes
-    ) {
-      return 1;
-    } else if (currentTimeInMinutes > endTimeInMinutes) {
-      return 2;
-    }
+    return 0;
   }
-  return 2; // Valor por defecto si no cumple ninguna condición
 }
 
 export function isCurrentTimeGreaterThanTitle(
   horario: NuevoHorario,
   currentDate: Date
-) {
+): number {
   // Obtener la hora actual
   const currentHour = currentDate.getHours();
   const currentMinutes = currentDate.getMinutes();
@@ -152,12 +141,11 @@ export function isCurrentTimeGreaterThanTitle(
   const titleTimeInMinutes = titleHour * 60 + titleMinutes;
 
   // Verificar si "time" está vacío
-  if (!horario.time) {
-    if (currentTimeInMinutes > titleTimeInMinutes) {
-      return 2;
-    } else {
-      return 1;
-    }
+
+  if (currentTimeInMinutes > titleTimeInMinutes) {
+    return 2;
+  } else {
+    return 1;
   }
 }
 
@@ -169,3 +157,22 @@ export function determinarNumeroDeJornadas(details: string): number {
     return 1; // Una jornada
   }
 }
+
+//   } else {
+//     return 2;
+//   }
+// } else {
+//   // Extraer la hora de "time" en horario
+//   const horarioEndTime = horario.time.split(' ')[1]; // "18:00"
+//   console.log('[HORARIO TIME TIME]: ', horarioEndTime);
+//   const [endHour, endMinutes] = horarioEndTime.split(':').map(Number);
+//   const endTimeInMinutes = endHour * 60 + endMinutes;
+//   console.log('[END TIME TIME IN MINUTES]: ', endTimeInMinutes);
+//   if (
+//     currentTimeInMinutes > titleTimeInMinutes &&
+//     currentTimeInMinutes <= endTimeInMinutes
+//   ) {
+//     return 1;
+//   } else if (currentTimeInMinutes > endTimeInMinutes) {
+//     return 2;
+//   }
