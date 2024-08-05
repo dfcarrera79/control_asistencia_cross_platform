@@ -10,13 +10,21 @@ import { useAuthStore } from '../stores/auth';
 import { useAxios } from '../services/useAxios';
 import { DeviceId } from '../components/models';
 import { LocalStorage, useQuasar } from 'quasar';
-import { fetchHorario, obtenerSalidaRegistrada } from '../services/useHorarios';
+import {
+  fetchHorario,
+  fetchHorarioYesterday,
+  obtenerSalidaRegistrada,
+} from '../services/useHorarios';
 import { Geolocation } from '@capacitor/geolocation';
 import { useMensajes } from '../services/useMensajes';
 import type { NuevoHorario, ObjectError } from '../components/models';
 import { columnasAsistencias } from '../components/columns';
 import {
+  formatDate,
+  getNextDay,
+  getPreviousDay,
   obtenerDistancia,
+  esHorarioNocturno,
   deducirMensajeError,
   determinarNumeroDeJornadas,
   isCurrentTimeGreaterThanTime,
@@ -49,6 +57,7 @@ const hora = ref('');
 const text = ref('');
 const codigo = ref(0);
 const sinHorarios = ref(false);
+const esNocturno = ref<boolean>(false);
 const filas = ref<ObjetoEntradasRegistradas[]>([]);
 const $q = useQuasar();
 const check = ref(false);
@@ -75,6 +84,7 @@ const currentMonth = ref(0);
 const currentYear = ref(0);
 const entrada = ref(false);
 const horario = ref<NuevoHorario | null>(null);
+const horarioAyer = ref<NuevoHorario | null>(null);
 
 const updateButton = async () => {
   registrado.value = false;
@@ -118,13 +128,24 @@ const obtenerEntradaRegistrada = async (codigo: number, fecha: string) => {
   }
 };
 
+const formatoNocturno = (
+  jornada: string,
+  start: string,
+  finish: string
+): string => {
+  return `${jornada.split(' ')[0]} (${start}) - ${
+    jornada.split(' ')[1]
+  } (${finish})`;
+};
+
 onMounted(async () => {
   const currentDate = new Date();
   currentMonth.value = currentDate.getMonth() + 1;
   currentYear.value = currentDate.getFullYear();
   horario.value = await fetchHorario();
+  horarioAyer.value = await fetchHorarioYesterday();
 
-  if (horario.value == null) {
+  if (horario.value == null && horarioAyer.value == null) {
     sinHorarios.value = true;
     return;
   }
@@ -186,34 +207,118 @@ onMounted(async () => {
     }
 
     if (jornadas == 1) {
-      let si_no = isCurrentTimeGreaterThanTitle(horario.value, currentDate);
-      if (ent?.length == 0) {
-        numeroJornadas.value = 1;
+      esNocturno.value = esHorarioNocturno(horario.value.details);
+      let previousDay = getPreviousDay(horario.value.start);
 
-        if (si_no == 1) {
-          numeroJornadas.value = 1;
+      if (esNocturno.value) {
+        numeroJornadas.value = 1;
+        const entAnterior = await obtenerEntradaRegistrada(
+          authStore.codigo,
+          previousDay
+        );
+        const salidaToday = await obtenerSalidaRegistrada(
+          authStore.codigo,
+          horario.value.start,
+          numeroJornadas.value
+        );
+
+        if (
+          (entAnterior?.length == 1 &&
+            ent?.length == 0 &&
+            salidaToday?.length == 1) ||
+          (entAnterior?.length == 0 && ent?.length == 0)
+        ) {
+          // Registrar salida, ya que hay una entrada del día anterior
+          entrada.value = true;
+          return;
         }
 
-        if (si_no == 2) {
+        if (ent?.length == 1 && salidaToday?.length == 1) {
           registradoFinal.value = true;
           return;
         }
-      }
 
-      if (ent?.length == 1) {
+        if (
+          entAnterior?.length == 1 &&
+          salidaToday?.length == 0 &&
+          ent?.length == 0
+        ) {
+          // Registrar salida, ya que hay una entrada del día anterior
+          entrada.value = false;
+          return;
+        }
+
+        if (
+          formatDate(currentDate) == horario.value.start &&
+          ent?.length == 0 &&
+          entAnterior?.length == 0
+        ) {
+          entrada.value = true;
+          return;
+        }
+      } else {
+        let si_no = isCurrentTimeGreaterThanTitle(horario.value, currentDate);
+        if (ent?.length == 0) {
+          numeroJornadas.value = 1;
+          if (si_no == 1) {
+            numeroJornadas.value = 1;
+          }
+
+          if (si_no == 2) {
+            registradoFinal.value = true;
+            return;
+          }
+        }
+
         const salida = await obtenerSalidaRegistrada(
           authStore.codigo,
           horario.value.start,
           numeroJornadas.value
         );
 
-        if (salida?.length == 0) {
-          entrada.value = false;
-        } else if (salida?.length == 1) {
-          registradoFinal.value = true;
-          return;
+        if (ent?.length == 0 && salida?.length == 0) {
+          entrada.value = true;
+        }
+
+        if (ent?.length == 1) {
+          const salida = await obtenerSalidaRegistrada(
+            authStore.codigo,
+            horario.value.start,
+            numeroJornadas.value
+          );
+
+          if (salida?.length == 0) {
+            entrada.value = false;
+          } else if (salida?.length == 1) {
+            registradoFinal.value = true;
+            return;
+          }
         }
       }
+    }
+  }
+
+  if (!horario.value && horarioAyer.value) {
+    let nextDay = getNextDay(horarioAyer.value.start);
+
+    const entAnterior = await obtenerEntradaRegistrada(
+      authStore.codigo,
+      horarioAyer.value.start
+    );
+
+    const salidaToday = await obtenerSalidaRegistrada(
+      authStore.codigo,
+      nextDay,
+      numeroJornadas.value
+    );
+
+    if (salidaToday?.length == 1) {
+      registradoFinal.value = true;
+      return;
+    }
+
+    if (entAnterior?.length == 1 && salidaToday?.length == 0) {
+      entrada.value = false;
     }
   }
 });
@@ -472,7 +577,6 @@ const startScan = async () => {
             location.reload();
           }, 7000);
         }
-        // await registrarEntrada(codigo.value, numeroJornadas.value);
         if (checkRegistro.value == true) {
           hora.value = new Date().toLocaleTimeString();
           registrado.value = true;
@@ -596,6 +700,7 @@ onMounted(async () => {
     <div
       class="row justify-center text-center"
       v-if="
+        !esNocturno &&
         !showCamera &&
         horario &&
         !sinHorarios &&
@@ -603,8 +708,6 @@ onMounted(async () => {
         !mostrarRegistros
       "
     >
-      {{ numeroJornadas }}
-      <br />
       {{
         `Jornada en la que va a registrar su entrada/salida para hoy (${horario.start}):`
       }}
@@ -618,6 +721,35 @@ onMounted(async () => {
         disable
         :val="index + 1"
         :label="`Jornada ${index + 1}: ${jornada}`"
+      />
+    </div>
+
+    <div
+      class="row justify-center text-center"
+      v-if="
+        esNocturno &&
+        !showCamera &&
+        horario &&
+        !sinHorarios &&
+        !registradoFinal &&
+        !mostrarRegistros
+      "
+    >
+      {{
+        `Jornada en la que va a registrar su entrada/salida para hoy (${horario.start}):`
+      }}
+      <br />
+      <q-radio
+        v-model="numeroJornadas"
+        checked-icon="task_alt"
+        unchecked-icon="panorama_fish_eye"
+        disable
+        :val="1"
+        :label="`Jornada Nocturna: ${formatoNocturno(
+          jornadas[0],
+          horario.start,
+          getNextDay(horario.start)
+        )}`"
       />
     </div>
 
@@ -645,7 +777,11 @@ onMounted(async () => {
             Posiciona el código QR en el centro de la pantalla
           </span>
         </div>
-        <div v-if="!registrado && !registradoFinal && !mostrarRegistros">
+        <div
+          v-if="
+            !registrado && !registradoFinal && !mostrarRegistros && !sinHorarios
+          "
+        >
           <q-btn
             color="primary"
             rounded

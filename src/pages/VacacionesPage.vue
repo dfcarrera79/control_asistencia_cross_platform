@@ -58,7 +58,8 @@ const verificarExcepciones = async (autorizado: boolean) => {
 
 //Methods
 onMounted(async () => {
-  verificarExcepciones(autorizados.value);
+  tab.value = 'autorizados';
+  verificarExcepciones(true);
 });
 </script>
 
@@ -73,8 +74,8 @@ onMounted(async () => {
 
     <div class="text-caption text-grey-8">
       <p>
-        En esta sección se muestran las excepciones de vacaciones autorizadas y
-        no autorizadas del año en curso únicamente.
+        En esta sección se muestran las excepciones (vacaciones, permisos, etc.)
+        autorizadas y no autorizadas del año en curso únicamente.
       </p>
     </div>
 
@@ -91,12 +92,12 @@ onMounted(async () => {
         >
           <q-tab
             name="autorizados"
-            label="Autorizados"
+            label="Autorizadas"
             @click="verificarExcepciones(true)"
           />
           <q-tab
             name="noAutorizados"
-            label="No autorizados"
+            label="No autorizadas"
             @click="verificarExcepciones(false)"
           />
         </q-tabs>

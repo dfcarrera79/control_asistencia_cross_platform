@@ -65,7 +65,6 @@ const subirFoto = async (file: File) => {
 };
 
 const procesarSelfie = async (img: File) => {
-  console.log('[SE DIO CLICK EN REGISTRAR SELFIE]');
   if (img) {
     const path = await subirFoto(img);
     const response = await post(

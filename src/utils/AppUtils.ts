@@ -158,21 +158,53 @@ export function determinarNumeroDeJornadas(details: string): number {
   }
 }
 
-//   } else {
-//     return 2;
-//   }
-// } else {
-//   // Extraer la hora de "time" en horario
-//   const horarioEndTime = horario.time.split(' ')[1]; // "18:00"
-//   console.log('[HORARIO TIME TIME]: ', horarioEndTime);
-//   const [endHour, endMinutes] = horarioEndTime.split(':').map(Number);
-//   const endTimeInMinutes = endHour * 60 + endMinutes;
-//   console.log('[END TIME TIME IN MINUTES]: ', endTimeInMinutes);
-//   if (
-//     currentTimeInMinutes > titleTimeInMinutes &&
-//     currentTimeInMinutes <= endTimeInMinutes
-//   ) {
-//     return 1;
-//   } else if (currentTimeInMinutes > endTimeInMinutes) {
-//     return 2;
-//   }
+export const esHorarioNocturno = (details: string): boolean => {
+  // Divide las horas de inicio y fin de la cadena 'details'
+  const [horaInicio, horaFin] = details.split(' ').map((hora) => {
+    // Convertir la hora a formato 24 horas para comparación
+    const [hours, minutes] = hora.split(':').map(Number);
+    return hours + minutes / 60;
+  });
+
+  // Verificar si la jornada es nocturna
+  return horaInicio > horaFin;
+};
+
+export function getNextDay(dateString: string): string {
+  const [year, month, day] = dateString.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+
+  // Aumentar el día en 1
+  date.setDate(date.getDate() + 1);
+
+  // Obtener el año, mes y día del nuevo objeto Date
+  const nextYear = date.getFullYear();
+  const nextMonth = String(date.getMonth() + 1).padStart(2, '0');
+  const nextDay = String(date.getDate()).padStart(2, '0');
+
+  // Formatear la fecha en cadena 'yyyy-MM-dd'
+  return `${nextYear}-${nextMonth}-${nextDay}`;
+}
+
+export function getPreviousDay(dateString: string): string {
+  const [year, month, day] = dateString.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+
+  // Disminuir el día en 1
+  date.setDate(date.getDate() - 1);
+
+  // Obtener el año, mes y día del nuevo objeto Date
+  const prevYear = date.getFullYear();
+  const prevMonth = String(date.getMonth() + 1).padStart(2, '0');
+  const prevDay = String(date.getDate()).padStart(2, '0');
+
+  // Formatear la fecha en cadena 'yyyy-MM-dd'
+  return `${prevYear}-${prevMonth}-${prevDay}`;
+}
+
+export function formatDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}

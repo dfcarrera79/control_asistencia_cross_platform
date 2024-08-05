@@ -22,7 +22,6 @@
 //     });
 //     return salida.objetos;
 //   } catch (error) {
-//     // console.error('Error obteniendo salida registrada:', error);
 //     deducirMensajeError(error as ObjectError);
 //     return null;
 //   }
@@ -154,12 +153,7 @@
 import { useAuthStore } from '../stores/auth';
 import { useAxios } from '../services/useAxios';
 import type { ObjectError } from '../components/models';
-import {
-  deducirMensajeError,
-  isCurrentTimeGreaterThanTime,
-  isCurrentTimeGreaterThanTitle,
-} from '../utils/AppUtils';
-
+import { esHorarioNocturno, deducirMensajeError } from '../utils/AppUtils';
 import {
   NuevoHorario,
   SalidaObject,
@@ -183,6 +177,19 @@ export const fetchHorario = async () => {
   return horario;
 };
 
+export const fetchHorarioYesterday = async () => {
+  const currentDate = new Date();
+  const currentMonth = currentDate.getMonth() + 1;
+  const currentYear = currentDate.getFullYear();
+  const horario: NuevoHorario | null =
+    (await obtenerHorarioEmpleadoAyer(
+      authStore.codigo,
+      currentMonth,
+      currentYear
+    )) || null;
+  return horario;
+};
+
 const getJornadaForToday = (schedules: NuevoHorario[]) => {
   const today = new Date().toLocaleDateString('en-CA');
   let nuevoHorario = null;
@@ -191,6 +198,21 @@ const getJornadaForToday = (schedules: NuevoHorario[]) => {
       nuevoHorario = schedule;
     }
   });
+  return nuevoHorario;
+};
+
+const getJornadaForYesterday = (schedules: NuevoHorario[]) => {
+  const today = new Date();
+  today.setDate(today.getDate() - 1);
+  const yesterday = today.toLocaleDateString('en-CA');
+
+  let nuevoHorario = null;
+  schedules.forEach((schedule) => {
+    if (schedule.start === yesterday) {
+      nuevoHorario = schedule;
+    }
+  });
+
   return nuevoHorario;
 };
 
@@ -218,6 +240,38 @@ export const obtenerHorarioEmpleado = async (
   return null;
 };
 
+export const obtenerHorarioEmpleadoAyer = async (
+  code: number,
+  month: number,
+  year: number
+): Promise<NuevoHorario | null> => {
+  const respuesta: RespuestaHorarioEmpleado = await get(
+    '/obtener_horario_empleado',
+    {
+      codigo: code,
+      mes: month,
+      anio: year,
+    }
+  );
+  if (respuesta.error === 'S') {
+    return null;
+  }
+
+  if (respuesta.error === 'N') {
+    const jornadaAyer = getJornadaForYesterday(respuesta.objetos[0].horario);
+    let esNocturno;
+    if (jornadaAyer) {
+      esNocturno = esHorarioNocturno(jornadaAyer.details);
+      if (esNocturno) {
+        return jornadaAyer;
+      } else {
+        return null;
+      }
+    }
+  }
+  return null;
+};
+
 export const obtenerSalidaRegistrada = async (
   codigo: number,
   fecha: string,
@@ -229,7 +283,6 @@ export const obtenerSalidaRegistrada = async (
       fecha,
       jornada,
     });
-    console.log('[SALIDA]: ', JSON.stringify(salida));
     return salida.objetos;
   } catch (error) {
     deducirMensajeError(error as ObjectError);
@@ -241,7 +294,6 @@ export const obtenerAsistenciasFecha = async (
   codigo: number,
   fecha: string
 ) => {
-  console.log('[FECHA]: ', fecha);
   try {
     const asistencias: EntradasRegistradas = await get(
       '/obtener_asistencias_por_fecha',
@@ -250,7 +302,6 @@ export const obtenerAsistenciasFecha = async (
         fecha,
       }
     );
-    console.log('[ASISTENCIAS]: ', JSON.stringify(asistencias));
     return asistencias.objetos;
   } catch (error) {
     deducirMensajeError(error as ObjectError);

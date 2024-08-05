@@ -207,7 +207,6 @@ const handleClick = async (id: number) => {
   currentPosition();
   right.value = false;
   confirm.value = true;
-  console.log('[ID]: ', id);
   geolocalizacion.value = await getClientes(id);
 
   if (geolocalizacion.value.length !== 0) {
