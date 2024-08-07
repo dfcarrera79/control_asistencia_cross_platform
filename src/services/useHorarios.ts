@@ -145,8 +145,6 @@ export function verificarHorarios(
   horario: NuevoHorario | null,
   horarioAyer: NuevoHorario | null
 ): boolean {
-  console.log('[HORARIO]: ', horario);
-  console.log('[HORARIO AYER]: ', horarioAyer);
   if (horario == null && horarioAyer == null) {
     return true;
   }

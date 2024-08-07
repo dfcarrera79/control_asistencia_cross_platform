@@ -15,7 +15,6 @@ import {
   fetchHorario,
   handleResponse,
   checkPermission,
-  verificarHorarios,
   handleDistanceCheck,
   handleGpsPermission,
   verificarDispositivo,
@@ -141,12 +140,6 @@ onMounted(async () => {
   currentYear.value = currentDate.getFullYear();
   horario.value = await fetchHorario();
   horarioAyer.value = await fetchHorarioYesterday();
-
-  console.log('[HORARIO]: ', JSON.stringify(horario.value));
-  console.log('[HORARIO AYER]: ', JSON.stringify(horarioAyer.value));
-
-  // let que = verificarHorarios(horario.value, horarioAyer.value);
-  // console.log('[QUE]: ', que);
 
   if (horario.value) {
     const ent = await obtenerEntradaRegistrada(
