@@ -208,3 +208,13 @@ export function formatDate(date: Date): string {
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
+
+export const formatoNocturno = (
+  jornada: string,
+  start: string,
+  finish: string
+): string => {
+  return `${jornada.split(' ')[0]} (${start}) - ${
+    jornada.split(' ')[1]
+  } (${finish})`;
+};

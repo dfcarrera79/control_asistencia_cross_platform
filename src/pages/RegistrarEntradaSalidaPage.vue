@@ -9,9 +9,16 @@ import { Device } from '@capacitor/device';
 import { useAuthStore } from '../stores/auth';
 import { useAxios } from '../services/useAxios';
 import { DeviceId } from '../components/models';
-import { LocalStorage, useQuasar } from 'quasar';
+import { LocalStorage } from 'quasar';
 import {
+  subirFoto,
   fetchHorario,
+  handleResponse,
+  checkPermission,
+  verificarHorarios,
+  handleDistanceCheck,
+  handleGpsPermission,
+  verificarDispositivo,
   fetchHorarioYesterday,
   obtenerSalidaRegistrada,
 } from '../services/useHorarios';
@@ -23,6 +30,7 @@ import {
   formatDate,
   getNextDay,
   getPreviousDay,
+  formatoNocturno,
   obtenerDistancia,
   esHorarioNocturno,
   deducirMensajeError,
@@ -59,7 +67,6 @@ const codigo = ref(0);
 const sinHorarios = ref(false);
 const esNocturno = ref<boolean>(false);
 const filas = ref<ObjetoEntradasRegistradas[]>([]);
-const $q = useQuasar();
 const check = ref(false);
 const resultado = ref('');
 const registrado = ref(false);
@@ -128,16 +135,6 @@ const obtenerEntradaRegistrada = async (codigo: number, fecha: string) => {
   }
 };
 
-const formatoNocturno = (
-  jornada: string,
-  start: string,
-  finish: string
-): string => {
-  return `${jornada.split(' ')[0]} (${start}) - ${
-    jornada.split(' ')[1]
-  } (${finish})`;
-};
-
 onMounted(async () => {
   const currentDate = new Date();
   currentMonth.value = currentDate.getMonth() + 1;
@@ -145,10 +142,11 @@ onMounted(async () => {
   horario.value = await fetchHorario();
   horarioAyer.value = await fetchHorarioYesterday();
 
-  if (horario.value == null && horarioAyer.value == null) {
-    sinHorarios.value = true;
-    return;
-  }
+  console.log('[HORARIO]: ', JSON.stringify(horario.value));
+  console.log('[HORARIO AYER]: ', JSON.stringify(horarioAyer.value));
+
+  // let que = verificarHorarios(horario.value, horarioAyer.value);
+  // console.log('[QUE]: ', que);
 
   if (horario.value) {
     const ent = await obtenerEntradaRegistrada(
@@ -228,7 +226,6 @@ onMounted(async () => {
             salidaToday?.length == 1) ||
           (entAnterior?.length == 0 && ent?.length == 0)
         ) {
-          // Registrar salida, ya que hay una entrada del día anterior
           entrada.value = true;
           return;
         }
@@ -243,7 +240,6 @@ onMounted(async () => {
           salidaToday?.length == 0 &&
           ent?.length == 0
         ) {
-          // Registrar salida, ya que hay una entrada del día anterior
           entrada.value = false;
           return;
         }
@@ -345,25 +341,6 @@ onMounted(() => {
   codigo.value = session?.codigo || 0;
 });
 
-const subirFoto = async (file: File, code: number) => {
-  try {
-    const formData = new FormData();
-    formData.append('file', file);
-    const newQuery = `/comparar_fotos/${code}`;
-    const respt = await post(newQuery, {}, formData);
-    $q.notify({
-      color: respt.error === 'N' ? 'green-4' : 'red-5',
-      textColor: 'white',
-      icon: respt.error === 'N' ? 'cloud_done' : 'warning',
-      message: respt.mensaje,
-      timeout: 2000,
-    });
-    return respt;
-  } catch (error) {
-    mostrarMensaje('Error al subir la foto:', error as string);
-  }
-};
-
 const takeSelfie = async () => {
   try {
     const image = await Camera.getPhoto({
@@ -395,25 +372,6 @@ const takeSelfie = async () => {
   }
 };
 
-const verificarDispositivo = async () => {
-  id.value = await logDeviceInfo();
-  const respuesta = await get('/validar_dispositivo', {
-    id: id.value,
-  });
-  if (respuesta.error === 'N') {
-    check.value = true;
-  } else {
-    $q.notify({
-      color: 'red-5',
-      textColor: 'white',
-      icon: 'warning',
-      message: '¡No se encuentra el dispositivo registrado en el sistema!',
-      timeout: 2000,
-    });
-    check.value = false;
-  }
-};
-
 const registrarEntrada = async (employee_id: number, turn: number) => {
   try {
     const response = await post(
@@ -431,13 +389,7 @@ const registrarEntrada = async (employee_id: number, turn: number) => {
       checkRegistro.value = true;
       text.value = "Registro de entrada: '" + currentTime + "'";
     }
-    $q.notify({
-      color: response.error === 'N' ? 'green-4' : 'red-5',
-      textColor: 'white',
-      icon: response.error === 'N' ? 'cloud_done' : 'warning',
-      message: response.mensaje,
-      timeout: 2000,
-    });
+    handleResponse(response);
   } catch (error) {
     deducirMensajeError(error as ObjectError);
   }
@@ -460,13 +412,7 @@ const registrarSalida = async (employee_id: number, turn: number) => {
       checkRegistro.value = true;
       text.value = "Registro de salida: '" + currentTime + "'";
     }
-    $q.notify({
-      color: response.error === 'N' ? 'green-4' : 'red-5',
-      textColor: 'white',
-      icon: response.error === 'N' ? 'cloud_done' : 'warning',
-      message: response.mensaje,
-      timeout: 2000,
-    });
+    handleResponse(response);
   } catch (error) {
     deducirMensajeError(error as ObjectError);
   }
@@ -484,12 +430,7 @@ const printCurrentPosition = async () => {
     newPos.value.longitude = coordinates.coords.longitude;
     newPos.value.timestamp = coordinates.timestamp;
   } else {
-    $q.notify({
-      color: 'red-5',
-      textColor: 'white',
-      icon: 'warning',
-      message: '¡Debe chequear los permisos de gps en las configuraciones!',
-    });
+    handleGpsPermission();
   }
 };
 
@@ -505,24 +446,6 @@ const logDeviceInfo = async () => {
   return info.identifier;
 };
 
-const checkPermission = async () => {
-  const status = await BarcodeScanner.checkPermission();
-
-  if (status.denied) {
-    // the user denied permission for good
-    // redirect user to app settings if they want to grant it anyway
-    const c = confirm(
-      'Si desea otorgar permiso para usar su cámara, habilítelo en la configuración de la aplicación.'
-    );
-    if (c) {
-      BarcodeScanner.openAppSettings();
-    }
-    return false;
-  } else {
-    return true;
-  }
-};
-
 const prepare = () => {
   BarcodeScanner.prepare();
 };
@@ -531,11 +454,10 @@ const prepare = () => {
 prepare();
 
 const startScan = async () => {
-  verificarDispositivo();
+  check.value = await verificarDispositivo(id.value);
   // Check camera permission
   const hasCameraPermission = await checkPermission();
   if (!hasCameraPermission) {
-    // Handle the case when the user denies camera permission
     return;
   }
 
@@ -544,10 +466,8 @@ const startScan = async () => {
 
   await BarcodeScanner.checkPermission({ force: true });
   // make background of WebView transparent
-  // note: if you are using ionic this might not be enough, check below
   BarcodeScanner.hideBackground();
-
-  const result: ScanResult = await BarcodeScanner.startScan(); // start scanning and wait for a result
+  const result: ScanResult = await BarcodeScanner.startScan();
 
   // if the result has content
   if (result.hasContent) {
@@ -585,17 +505,7 @@ const startScan = async () => {
         registrado.value = false;
       }
     }
-
-    $q.notify({
-      color: distance.value <= maxDistance ? 'green-4' : 'red-5',
-      textColor: 'white',
-      icon: distance.value <= maxDistance ? 'cloud_done' : 'warning',
-      message:
-        distance.value <= maxDistance
-          ? 'El dispositivo está dentro del rango especificado.'
-          : 'El dispositivo está fuera del rango especificado.',
-      timeout: 2000,
-    });
+    handleDistanceCheck(distance.value, maxDistance);
   }
 };
 
