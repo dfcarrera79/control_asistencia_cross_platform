@@ -23,8 +23,8 @@ import {
 } from '../services/useHorarios';
 import { Geolocation } from '@capacitor/geolocation';
 import { useMensajes } from '../services/useMensajes';
-import type { NuevoHorario, ObjectError } from '../components/models';
 import { columnasAsistencias } from '../components/columns';
+import type { NuevoHorario, ObjectError } from '../components/models';
 import {
   formatDate,
   getNextDay,
@@ -316,11 +316,19 @@ watch(registradoFinal, () => {
   if (registradoFinal.value && horario.value != null) {
     obtenerAsistenciasFecha(authStore.codigo, horario.value.start);
   }
+  if (registradoFinal.value && horarioAyer.value != null) {
+    let nextDay = getNextDay(horarioAyer.value.start);
+    obtenerAsistenciasFecha(authStore.codigo, nextDay);
+  }
 });
 
 watch(mostrarRegistros, () => {
   if (horario.value != null) {
     obtenerAsistenciasFecha(authStore.codigo, horario.value.start);
+  }
+  if (registradoFinal.value && horarioAyer.value != null) {
+    let nextDay = getNextDay(horarioAyer.value.start);
+    obtenerAsistenciasFecha(authStore.codigo, nextDay);
   }
 });
 

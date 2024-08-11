@@ -1,7 +1,7 @@
 import { Notify } from 'quasar';
 import { useAuthStore } from '../stores/auth';
 import { useAxios } from '../services/useAxios';
-import type { ObjectError } from '../components/models';
+import type { ObjectError, ListaEmpleados } from '../components/models';
 import { useMensajes } from '../services/useMensajes';
 import { esHorarioNocturno, deducirMensajeError } from '../utils/AppUtils';
 import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
@@ -89,6 +89,80 @@ export const obtenerHorarioEmpleado = async (
     return jornada;
   }
   return null;
+};
+
+export const meses = [
+  'Enero',
+  'Febrero',
+  'Marzo',
+  'Abril',
+  'Mayo',
+  'Junio',
+  'Julio',
+  'Agosto',
+  'Septiembre',
+  'Octubre',
+  'Noviembre',
+  'Diciembre',
+];
+
+export function obtenerNumeroMes(nombreMes: string): number {
+  const indice = meses.indexOf(nombreMes);
+
+  if (indice !== -1) {
+    return indice + 1;
+  } else {
+    return 0;
+  }
+}
+
+export const generarFechas = (
+  mes: number | null,
+  anio: number | null
+): { desde: string; hasta: string } => {
+  if (mes !== null && anio !== null) {
+    // Generar fecha "desde" (primer día del mes)
+    const desd = new Date(anio, mes - 1, 1);
+    const desde = `${desd.getFullYear()}/${String(desd.getMonth() + 1).padStart(
+      2,
+      '0'
+    )}/${String(desd.getDate()).padStart(2, '0')}`;
+
+    // Generar fecha "hasta" (último día del mes)
+    const hast = new Date(anio, mes, 0);
+    const hasta = `${hast.getFullYear()}/${String(hast.getMonth() + 1).padStart(
+      2,
+      '0'
+    )}/${String(hast.getDate()).padStart(2, '0')}`;
+
+    return { desde, hasta };
+  }
+  return { desde: '', hasta: '' };
+};
+
+export const getCurrentYear = (): number => {
+  const currentDate = new Date();
+  return currentDate.getFullYear();
+};
+
+export function useYearOptions() {
+  const yearOptions: number[] = [];
+  const currentYear = getCurrentYear();
+  const maxYear = currentYear + 1;
+  for (let year = currentYear - 1; year <= maxYear; year++) {
+    yearOptions.push(year);
+  }
+  return yearOptions;
+}
+
+export const obtenerCodigo = (
+  nombreCompleto: string,
+  empleados: ListaEmpleados[]
+) => {
+  const empleado = empleados.find(
+    (empleado) => empleado.nombre_completo === nombreCompleto
+  );
+  return empleado ? empleado.codigo : null;
 };
 
 export const obtenerHorarioEmpleadoAyer = async (

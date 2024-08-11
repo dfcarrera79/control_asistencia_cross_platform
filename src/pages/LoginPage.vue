@@ -1,15 +1,15 @@
 <script setup lang="ts">
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { ref, onMounted, watch } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import { Session } from '../components/models';
 import { useAxios } from '../services/useAxios';
 import { useMensajes } from '../services/useMensajes';
 import type { ObjectError } from '../components/models';
 import { deducirMensajeError } from '../utils/AppUtils';
-import { LocalStorage, Loading, QSpinnerFacebook, useQuasar } from 'quasar';
+import { handleResponse } from '../services/useHorarios';
+import { LocalStorage, Loading, QSpinnerFacebook } from 'quasar';
 
-const $q = useQuasar();
 const router = useRouter();
 const authStore = useAuthStore();
 const url = ref(authStore.url);
@@ -22,10 +22,6 @@ const id = ref('');
 const clave = ref('');
 const isPwd = ref(true);
 const newUrl = ref(url.value.slice(url.value.indexOf('#') + 1));
-const rucRule: ((v: string) => string | boolean)[] = [
-  (v: string) => !!v || 'El RUC es obligatorio',
-  (v: string) => /^\d{13}$/.test(v) || 'El RUC debe contener 13 dígitos',
-];
 const token = ref('');
 const emailRule: ((v: string) => string | boolean)[] = [
   (v: string) => !!v || 'El correo electrónico es obligatorio',
@@ -73,12 +69,7 @@ const logearse = async () => {
   });
 
   if (respuesta.error === 'S') {
-    $q.notify({
-      color: 'red-5',
-      textColor: 'white',
-      icon: 'warning',
-      message: respuesta.mensaje,
-    });
+    handleResponse(respuesta);
     Loading.hide();
     return;
   }
@@ -93,12 +84,7 @@ const logearse = async () => {
     });
 
     if (respuesta2.error === 'S') {
-      $q.notify({
-        color: 'red-5',
-        textColor: 'white',
-        icon: 'warning',
-        message: respuesta2.mensaje,
-      });
+      handleResponse(respuesta2);
       Loading.hide();
       return;
     }
@@ -125,20 +111,9 @@ const logearse = async () => {
   router.push('/');
 };
 
-async function fetchEmail() {
-  try {
-    const respuesta = await get('/obtener_usuario', {
-      id: ruc.value,
-    });
-
-    // Assuming the response data has a property 'email' containing the email address
-    correoElectronico.value = respuesta.objetos;
-  } catch (error) {
-    deducirMensajeError(error as ObjectError);
-  }
-}
-
-watch(ruc, fetchEmail);
+const recuperarContraseña = () => {
+  mostrarVentana.value = true;
+};
 
 const enviarCorreoRecuperacion = async () => {
   try {
@@ -154,17 +129,35 @@ const enviarCorreoRecuperacion = async () => {
     );
 
     // Handle the response accordingly
-    console.log(response);
+    if (response.error === 'N') {
+      mostrarMensaje(
+        'Su nueva clave ha sido enviada a su correo electrónico. Por favor, revise la carpeta de spam si no la encuentra en la bandeja de entrada.',
+        response.mensaje
+      );
+      handleCerrarDialogo();
+      return;
+    }
+
+    if (response.error === 'S') {
+      mostrarMensaje('Error', response.mensaje);
+      return;
+    }
   } catch (error) {
     deducirMensajeError(error as ObjectError);
   }
+};
+
+const handleCerrarDialogo = () => {
+  ruc.value = '';
+  mostrarVentana.value = false;
+  correoElectronico.value = '';
 };
 </script>
 
 <template>
   <q-page padding class="flex flex-center bg-image">
     <q-dialog v-model="mostrarVentana" persistent>
-      <q-card>
+      <q-card style="width: 250px">
         <div class="row bg-blue-8 justify-center q-pa-xs">
           <span
             class="text-h6 text-center text-white"
@@ -176,14 +169,12 @@ const enviarCorreoRecuperacion = async () => {
           <q-input
             v-model="ruc"
             debounce="750"
-            label="RUC | CI | Pasaporte"
+            label="Login (Nombre de usuario)"
             dense
-            :rules="rucRule"
-            @input="fetchEmail"
           />
           <q-input
             v-model="correoElectronico"
-            debounce="750"
+            debounce="1000"
             label="Email"
             dense
             :rules="emailRule"
@@ -196,7 +187,7 @@ const enviarCorreoRecuperacion = async () => {
             label="Enviar"
             @click="enviarCorreoRecuperacion()"
           />
-          <q-btn flat label="Cerrar" @click="mostrarVentana = false" />
+          <q-btn flat label="Cerrar" @click="handleCerrarDialogo" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -244,7 +235,7 @@ const enviarCorreoRecuperacion = async () => {
         </div>
       </div>
 
-      <!-- <div class="row">
+      <div class="row">
         <div class="column col-xs-12 q-pa-sm">
           <a
             class="full-width text-secondary q-link"
@@ -261,7 +252,7 @@ const enviarCorreoRecuperacion = async () => {
             >
           </a>
         </div>
-      </div> -->
+      </div>
     </q-card>
   </q-page>
 </template>
