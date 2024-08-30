@@ -5,17 +5,14 @@
   "author": "dfcarrera79 <44879886+dfcarrera79@users.noreply.github.com>",
   "private": true,
   "dependencies": {
-    "@capacitor-community/barcode-scanner": "^4.0.1",
-    "@capacitor/android": "^5.7.2",
-    "@capacitor/app": "^5.0.6",
-    "@capacitor/camera": "^5.0.6",
-    "@capacitor/cli": "^5.0.0",
-    "@capacitor/core": "^6.1.0",
-    "@capacitor/device": "^5.0.6",
-    "@capacitor/filesystem": "^5.1.4",
-    "@capacitor/geolocation": "^5.0.6",
-    "@capacitor/google-maps": "^5.4.1",
-    "@capacitor/splash-screen": "^5.0.6",
-    "vue-qrcode-reader": "^5.1.0"
+    "@capacitor/android": "^6.1.2",
+    "@capacitor/app": "^6.0.0",
+    "@capacitor/barcode-scanner": "^1.0.1",
+    "@capacitor/camera": "^6.0.2",
+    "@capacitor/cli": "^6.0.0",
+    "@capacitor/core": "^6.0.0",
+    "@capacitor/device": "^6.0.1",
+    "@capacitor/geolocation": "^6.0.1",
+    "html5-qrcode": "^2.3.8"
   }
 }

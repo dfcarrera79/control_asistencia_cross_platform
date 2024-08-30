@@ -16,9 +16,8 @@ onMounted(() => {
 });
 
 const cerrarSesion = () => {
-  authStore.estaLogeado = false;
+  authStore.cerrarSesion();
   router.push('/login');
-  LocalStorage.clear();
 };
 
 const leftDrawerOpen = ref(false);

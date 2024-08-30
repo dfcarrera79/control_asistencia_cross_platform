@@ -14,12 +14,11 @@ import {
   subirFoto,
   fetchHorario,
   handleResponse,
-  checkPermission,
   handleDistanceCheck,
   handleGpsPermission,
-  verificarDispositivo,
   fetchHorarioYesterday,
   obtenerSalidaRegistrada,
+  verificarDispositivoMaster,
 } from '../services/useHorarios';
 import { Geolocation } from '@capacitor/geolocation';
 import { useMensajes } from '../services/useMensajes';
@@ -44,18 +43,15 @@ import {
   RespuestaCoordenadas,
   ObjetoEntradasRegistradas,
 } from '../components/models';
+import { ref, watch, computed, onMounted } from 'vue';
+
 import {
-  computed,
-  onDeactivated,
-  onBeforeUnmount,
-  ref,
-  onMounted,
-  watch,
-} from 'vue';
-import {
-  BarcodeScanner,
-  ScanResult,
-} from '@capacitor-community/barcode-scanner';
+  CapacitorBarcodeScanner,
+  CapacitorBarcodeScannerAndroidScanningLibrary,
+  CapacitorBarcodeScannerCameraDirection,
+  CapacitorBarcodeScannerScanOrientation,
+  CapacitorBarcodeScannerScanResult,
+} from '@capacitor/barcode-scanner';
 
 // Data
 const id = ref('');
@@ -63,13 +59,16 @@ const foto = ref();
 const hora = ref('');
 const text = ref('');
 const codigo = ref(0);
+const targetLatitude = ref(0);
+const targetLongitude = ref(0);
+const maxDistance = 50;
+const distance = ref(0);
 const sinHorarios = ref(false);
 const esNocturno = ref<boolean>(false);
 const filas = ref<ObjetoEntradasRegistradas[]>([]);
 const check = ref(false);
 const resultado = ref('');
 const registrado = ref(false);
-const showCamera = ref(false);
 const checkSelfie = ref(false);
 const checkRegistro = ref(false);
 const authStore = useAuthStore();
@@ -435,45 +434,54 @@ const printCurrentPosition = async () => {
   }
 };
 
-const onBackButton = () => {
-  if (showCamera.value) {
-    stopScan(); // Stop the scan (close the camera)
-    showCamera.value = false;
-  }
-};
-
 const logDeviceInfo = async () => {
   const info: DeviceId = await Device.getId();
   return info.identifier;
 };
 
-const prepare = () => {
-  BarcodeScanner.prepare();
+const scanner = async () => {
+  const respuesta: CapacitorBarcodeScannerScanResult =
+    await CapacitorBarcodeScanner.scanBarcode({
+      hint: 0,
+      scanInstructions: 'Enfoque el objetivo en la camara',
+      scanButton: false,
+      scanText: 'Iniciar',
+      cameraDirection: CapacitorBarcodeScannerCameraDirection.BACK,
+      scanOrientation: CapacitorBarcodeScannerScanOrientation.ADAPTIVE,
+      android: {
+        scanningLibrary: CapacitorBarcodeScannerAndroidScanningLibrary.ZXING,
+      },
+    });
+  if (respuesta.ScanResult) {
+    return respuesta.ScanResult;
+  }
 };
 
-// Call the prepare method before using the barcode scanner
-prepare();
+const obtenerCoordenadas = async (nombre: string) => {
+  const respuesta: RespuestaCoordenadas = await get(
+    '/obtener_coordenadas_almacen',
+    { alm_nomcom: nombre }
+  );
 
-const startScan = async () => {
-  check.value = await verificarDispositivo(id.value);
-  // Check camera permission
-  const hasCameraPermission = await checkPermission();
-  if (!hasCameraPermission) {
+  if (respuesta.error === 'N') {
+    const firstItem = respuesta.objetos[0];
+    targetLatitude.value = firstItem.lat;
+    targetLongitude.value = firstItem.long;
+  } else {
+    mostrarMensaje('Error', respuesta.mensaje);
     return;
   }
+};
+
+const startScan = async () => {
+  check.value = await verificarDispositivoMaster(id.value, authStore.codigo);
 
   await printCurrentPosition();
-  showCamera.value = true;
-
-  await BarcodeScanner.checkPermission({ force: true });
-  // make background of WebView transparent
-  BarcodeScanner.hideBackground();
-  const result: ScanResult = await BarcodeScanner.startScan();
+  const result = await scanner();
 
   // if the result has content
-  if (result.hasContent) {
-    showCamera.value = false;
-    resultado.value = result.content; // this is the decoded string
+  if (result) {
+    resultado.value = result; // this is the decoded string
     await obtenerCoordenadas(resultado.value);
     distance.value = obtenerDistancia(
       newPos.value.latitude,
@@ -510,40 +518,6 @@ const startScan = async () => {
   }
 };
 
-const stopScan = () => {
-  BarcodeScanner.showBackground();
-  BarcodeScanner.stopScan();
-};
-
-onDeactivated(() => {
-  stopScan();
-});
-
-onBeforeUnmount(() => {
-  stopScan();
-});
-
-const targetLatitude = ref(0);
-const targetLongitude = ref(0);
-const maxDistance = 30; // 30 meters
-const distance = ref(0);
-
-const obtenerCoordenadas = async (nombre: string) => {
-  const respuesta: RespuestaCoordenadas = await get(
-    '/obtener_coordenadas_almacen',
-    { alm_nomcom: nombre }
-  );
-
-  if (respuesta.error === 'N') {
-    const firstItem = respuesta.objetos[0];
-    targetLatitude.value = firstItem.lat;
-    targetLongitude.value = firstItem.long;
-  } else {
-    mostrarMensaje('Error', respuesta.mensaje);
-    return;
-  }
-};
-
 const jornadas = computed(() => {
   if (horario.value) {
     const input = horario.value.details;
@@ -553,38 +527,20 @@ const jornadas = computed(() => {
 });
 
 onMounted(async () => {
-  stopScan();
-  document.addEventListener('backbutton', onBackButton);
   id.value = await logDeviceInfo();
 });
 </script>
 
 <template>
   <q-page padding>
-    <div class="sample-background">
-      <!-- this background simulates the camera view -->
-    </div>
-    <div v-if="showCamera" class="container">
-      <div class="barcode-scanner--area--container">
-        <div class="relative">
-          <p>Apunta tu cámara al código QR</p>
-        </div>
-        <div class="square surround-cover">
-          <div class="barcode-scanner--area--outer surround-cover">
-            <div class="barcode-scanner--area--inner"></div>
-          </div>
-        </div>
-      </div>
-    </div>
     <h4
-      v-if="!showCamera"
       class="row text-uppercase text-grey-8 justify-center items-center content-center q-pa-md q-pb-xs q-mb-xs text-center"
       style="font-family: 'Bebas Neue'"
     >
       <div class="row no-wrap">
         <span v-if="sinHorarios"> No tiene un horario asignado para hoy </span>
         <span v-if="registradoFinal && !sinHorarios">
-          Entradas y salidas registradas hoy
+          Entradas y salidas registradas
         </span>
         <span v-if="!registradoFinal && !sinHorarios">
           Registrar {{ titulo }}</span
@@ -603,7 +559,7 @@ onMounted(async () => {
       <q-toggle
         v-model="mostrarRegistros"
         icon="alarm"
-        label="Ver registros de hoy"
+        label="Ver registros de esta semana"
         :disable="registradoFinal"
       />
     </div>
@@ -612,7 +568,6 @@ onMounted(async () => {
       class="row justify-center text-center"
       v-if="
         !esNocturno &&
-        !showCamera &&
         horario &&
         !sinHorarios &&
         !registradoFinal &&
@@ -623,23 +578,24 @@ onMounted(async () => {
         `Jornada en la que va a registrar su entrada/salida para hoy (${horario.start}):`
       }}
       <br />
-      <q-radio
-        v-model="numeroJornadas"
-        v-for="(jornada, index) in jornadas"
-        :key="index"
-        checked-icon="task_alt"
-        unchecked-icon="panorama_fish_eye"
-        disable
-        :val="index + 1"
-        :label="`Jornada ${index + 1}: ${jornada}`"
-      />
+      <div class="column">
+        <q-radio
+          v-model="numeroJornadas"
+          v-for="(jornada, index) in jornadas"
+          :key="index"
+          checked-icon="task_alt"
+          unchecked-icon="panorama_fish_eye"
+          disable
+          :val="index + 1"
+          :label="`Jornada ${index + 1}: ${jornada}`"
+        />
+      </div>
     </div>
 
     <div
       class="row justify-center text-center"
       v-if="
         esNocturno &&
-        !showCamera &&
         horario &&
         !sinHorarios &&
         !registradoFinal &&
@@ -667,11 +623,7 @@ onMounted(async () => {
     <div class="column justify-center items-center content-center">
       <div
         v-if="
-          !showCamera &&
-          !registrado &&
-          !registradoFinal &&
-          !sinHorarios &&
-          !mostrarRegistros
+          !registrado && !registradoFinal && !sinHorarios && !mostrarRegistros
         "
         class="col-12 text-center q-pt-md"
       >
@@ -683,11 +635,6 @@ onMounted(async () => {
     </div>
     <div class="row justify-center q-pt-lg">
       <div class="col text-center">
-        <div v-if="showCamera">
-          <span class="text-subtitle2 text-grey-1" v-if="!registrado">
-            Posiciona el código QR en el centro de la pantalla
-          </span>
-        </div>
         <div
           v-if="
             !registrado && !registradoFinal && !mostrarRegistros && !sinHorarios
@@ -700,7 +647,6 @@ onMounted(async () => {
             label="Escanear código QR"
             size="lg"
             @click="startScan()"
-            v-show="!showCamera"
           />
         </div>
       </div>

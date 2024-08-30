@@ -61,6 +61,7 @@ export interface Session {
   ruc: string;
   usuario: string;
   codigo: number;
+  appCodigo: number;
   login: string;
   clave: string;
 }
@@ -165,4 +166,14 @@ export interface SalidaObject {
 
 interface ObjetoSalida {
   codigo: number;
+}
+
+export interface ListaEmpleados {
+  codigo: number;
+  nombre_completo: string;
+}
+
+export interface Opcion {
+  label: string;
+  valor: number;
 }

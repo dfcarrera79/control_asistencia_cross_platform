@@ -1,17 +1,22 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { ref, onMounted, watch } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import { Session } from '../components/models';
 import { useAxios } from '../services/useAxios';
 import { useMensajes } from '../services/useMensajes';
-import type { ObjectError } from '../components/models';
+import type { ObjectError, Opcion } from '../components/models';
 import { deducirMensajeError } from '../utils/AppUtils';
 import { handleResponse } from '../services/useHorarios';
 import { LocalStorage, Loading, QSpinnerFacebook } from 'quasar';
 
 const router = useRouter();
 const authStore = useAuthStore();
+const opcion = ref<Opcion | null>(null);
+const options = ref([
+  { label: 'Conexión Local', valor: 1 },
+  { label: 'Conexión por Internet', valor: 2 },
+]);
 const url = ref(authStore.url);
 const { get, put } = useAxios();
 const { mostrarMensaje } = useMensajes();
@@ -40,8 +45,20 @@ onMounted(() => {
   codigo.value = session?.codigo || 0;
   token.value = session?.token || '';
 
-  if (session) {
-    authStore.iniciarSesion(token.value, codigo.value, usuario.value, id.value);
+  if (session?.appCodigo == 1) {
+    opcion.value = options.value[0];
+  } else {
+    opcion.value = options.value[1];
+  }
+
+  if (session?.estaLogeado == true) {
+    authStore.iniciarSesion(
+      token.value,
+      codigo.value,
+      authStore.appCodigo,
+      usuario.value,
+      id.value
+    );
     router.push(newUrl.value);
   }
 });
@@ -105,6 +122,7 @@ const logearse = async () => {
   authStore.iniciarSesion(
     respuesta.token,
     objetos2.codigo,
+    authStore.appCodigo,
     objetos.usu_nomape,
     objetos.usu_login
   );
@@ -152,6 +170,12 @@ const handleCerrarDialogo = () => {
   mostrarVentana.value = false;
   correoElectronico.value = '';
 };
+
+watch(opcion, () => {
+  if (opcion.value !== null) {
+    authStore.appCodigo = opcion.value.valor;
+  }
+});
 </script>
 
 <template>
@@ -192,15 +216,25 @@ const handleCerrarDialogo = () => {
       </q-card>
     </q-dialog>
 
-    <q-card class="shadow-8 bg-white" style="width: 300px; height: 260px">
+    <q-card class="shadow-8 bg-white" style="width: 300px; height: 320px">
       <div class="row bg-blue-8 justify-center q-pa-xs">
         <span
           class="text-h6 text-center text-white"
           style="font-family: 'Bebas Neue'"
-          >CONTROL DE ASISTENCIA APP V0.1</span
+          >CONTROL DE ASISTENCIA APP V1.0.1</span
         >
       </div>
       <div class="row">
+        <div class="column col-xs-12 q-pa-sm">
+          <q-select
+            outlined
+            dense
+            v-model="opcion"
+            :options="options"
+            label="Modo de Conexión"
+            option-label="label"
+          />
+        </div>
         <div class="column col-xs-12 q-pa-sm">
           <q-input v-model="id" type="text" label="Usuario" dense />
         </div>

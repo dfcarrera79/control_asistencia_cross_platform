@@ -1,10 +1,9 @@
 import { Notify } from 'quasar';
 import { useAuthStore } from '../stores/auth';
 import { useAxios } from '../services/useAxios';
-import type { ObjectError, ListaEmpleados } from '../components/models';
 import { useMensajes } from '../services/useMensajes';
+import type { ObjectError, ListaEmpleados } from '../components/models';
 import { esHorarioNocturno, deducirMensajeError } from '../utils/AppUtils';
-import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
 import {
   NuevoHorario,
   SalidaObject,
@@ -52,12 +51,19 @@ const getJornadaForToday = (schedules: NuevoHorario[]) => {
   return nuevoHorario;
 };
 
-const getJornadaForYesterday = (schedules: NuevoHorario[]) => {
+const getJornadaForYesterday = (schedules: NuevoHorario[]): NuevoHorario => {
   const today = new Date();
   today.setDate(today.getDate() - 1);
   const yesterday = today.toLocaleDateString('en-CA');
 
-  let nuevoHorario = null;
+  let nuevoHorario = {
+    start: '',
+    end: '',
+    time: '',
+    title: '',
+    bgcolor: '',
+    details: '',
+  };
   schedules.forEach((schedule) => {
     if (schedule.start === yesterday) {
       nuevoHorario = schedule;
@@ -183,7 +189,9 @@ export const obtenerHorarioEmpleadoAyer = async (
   }
 
   if (respuesta.error === 'N') {
-    const jornadaAyer = getJornadaForYesterday(respuesta.objetos[0].horario);
+    const jornadaAyer: NuevoHorario = getJornadaForYesterday(
+      respuesta.objetos[0].horario
+    );
     let esNocturno;
     if (jornadaAyer) {
       esNocturno = esHorarioNocturno(jornadaAyer.details);
@@ -302,20 +310,18 @@ export const verificarDispositivo = async (ide: string) => {
   }
 };
 
-export const checkPermission = async () => {
-  const status = await BarcodeScanner.checkPermission();
-
-  if (status.denied) {
-    // the user denied permission for good
-    // redirect user to app settings if they want to grant it anyway
-    const c = confirm(
-      'Si desea otorgar permiso para usar su cámara, habilítelo en la configuración de la aplicación.'
-    );
-    if (c) {
-      BarcodeScanner.openAppSettings();
-    }
-    return false;
-  } else {
+export const verificarDispositivoMaster = async (
+  ide: string,
+  codigo: number
+) => {
+  const respuesta = await get('/validar_dispositivo_master', {
+    id: ide,
+    usuario_codigo: codigo,
+  });
+  if (respuesta.error === 'N') {
     return true;
+  } else {
+    handleDispositivo();
+    return false;
   }
 };

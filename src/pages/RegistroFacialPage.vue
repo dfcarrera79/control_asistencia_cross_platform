@@ -6,6 +6,7 @@ import {
   CameraSource,
   CameraDirection,
 } from '@capacitor/camera';
+import { useAuthStore } from '../stores/auth';
 import { Session } from '../components/models';
 import { useAxios } from '../services/useAxios';
 import { LocalStorage, useQuasar } from 'quasar';
@@ -21,8 +22,9 @@ const $q = useQuasar();
 const check = ref(false);
 const confirmar = ref(false);
 const showCamera = ref(false);
+const authStore = useAuthStore();
 const path = process.env.IMAGE_PATH;
-const replacedPath = process.env.REPLACED_PATH;
+const replacedPath = authStore.PATH;
 const { get, post } = useAxios();
 
 // Methods
@@ -117,14 +119,14 @@ const textInfo = computed(() => {
     </h4>
 
     <div class="col-12 text-center q-pt-none" v-if="foto && !check">
-      <img :src="foto" alt="Foto tomada" style="width: 340px" />
+      <img :src="foto" alt="Foto tomada" style="width: 120px" />
     </div>
 
     <div class="col-12 text-center q-pt-none" v-if="check">
       <img
         :src="selfie.replace(path as string, replacedPath as string)"
         alt="Foto tomada"
-        style="width: 340px"
+        style="width: 140px"
       />
     </div>
 
