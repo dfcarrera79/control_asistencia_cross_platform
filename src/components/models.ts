@@ -145,6 +145,7 @@ export interface ObjetoEntradasRegistradas {
   codigo: number;
   entrada: string;
   salida: string;
+  horas: number;
 }
 
 export interface EntradaObject {

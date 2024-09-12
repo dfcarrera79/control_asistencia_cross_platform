@@ -192,6 +192,7 @@ export const obtenerHorarioEmpleadoAyer = async (
     const jornadaAyer: NuevoHorario = getJornadaForYesterday(
       respuesta.objetos[0].horario
     );
+    console.log('[JORNADA AYER]: ', JSON.stringify(jornadaAyer));
     let esNocturno;
     if (jornadaAyer) {
       esNocturno = esHorarioNocturno(jornadaAyer.details);

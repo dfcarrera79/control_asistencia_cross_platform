@@ -22,4 +22,10 @@ export const columnasAsistencias: QTableProps['columns'] = [
       row.salida ? moment(row.salida).format('HH:mm - DD/MM/YY') : '',
     align: 'left',
   },
+  {
+    name: 'horas',
+    label: 'Horas suplementarias',
+    field: 'horas',
+    align: 'left',
+  },
 ];

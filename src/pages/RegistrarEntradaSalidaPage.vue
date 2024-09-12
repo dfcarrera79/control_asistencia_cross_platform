@@ -5,11 +5,11 @@ import {
   CameraDirection,
   CameraResultType,
 } from '@capacitor/camera';
+import { LocalStorage } from 'quasar';
 import { Device } from '@capacitor/device';
 import { useAuthStore } from '../stores/auth';
 import { useAxios } from '../services/useAxios';
 import { DeviceId } from '../components/models';
-import { LocalStorage } from 'quasar';
 import {
   subirFoto,
   fetchHorario,
@@ -191,6 +191,10 @@ onMounted(async () => {
         if (salida?.length == 0) {
           entrada.value = false;
           numeroJornadas.value = 2;
+        } else if (salida?.length == 1) {
+          entrada.value = false;
+          registradoFinal.value = false;
+        } else if (salida?.length == 2) {
           registradoFinal.value = true;
         }
       }
@@ -675,7 +679,7 @@ onMounted(async () => {
         hide-pagination
         row-key="codigo"
         :columns="columnas"
-        :visible-columns="['entrada', 'salida']"
+        :visible-columns="['entrada', 'salida', 'horas']"
       >
       </q-table>
     </div>
