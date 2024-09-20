@@ -13,6 +13,11 @@ import { LocalStorage, Loading, QSpinnerFacebook } from 'quasar';
 const router = useRouter();
 const authStore = useAuthStore();
 const opcion = ref<Opcion | null>(null);
+const empresa = ref<Opcion | null>(null);
+const empresas = ref([
+  { label: 'Apromed', valor: 1 },
+  { label: 'Cooperativa TAG...', valor: 2 },
+]);
 const options = ref([
   { label: 'Conexión Local', valor: 1 },
   { label: 'Conexión por Internet', valor: 2 },
@@ -216,7 +221,7 @@ watch(opcion, () => {
       </q-card>
     </q-dialog>
 
-    <q-card class="shadow-8 bg-white" style="width: 300px; height: 320px">
+    <q-card class="shadow-8 bg-white" style="width: 300px; height: 380px">
       <div class="row bg-blue-8 justify-center q-pa-xs">
         <span
           class="text-h6 text-center text-white"
@@ -225,6 +230,16 @@ watch(opcion, () => {
         >
       </div>
       <div class="row">
+        <div class="column col-xs-12 q-pa-sm">
+          <q-select
+            outlined
+            dense
+            v-model="empresa"
+            :options="empresas"
+            label="Seleccione la empresa"
+            option-label="label"
+          />
+        </div>
         <div class="column col-xs-12 q-pa-sm">
           <q-select
             outlined

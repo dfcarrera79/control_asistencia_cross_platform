@@ -455,6 +455,10 @@ const scanner = async () => {
       android: {
         scanningLibrary: CapacitorBarcodeScannerAndroidScanningLibrary.ZXING,
       },
+      web: {
+        showCameraSelection: true,
+        scannerFPS: 60,
+      },
     });
   if (respuesta.ScanResult) {
     return respuesta.ScanResult;

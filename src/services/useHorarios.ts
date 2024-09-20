@@ -2,7 +2,11 @@ import { Notify } from 'quasar';
 import { useAuthStore } from '../stores/auth';
 import { useAxios } from '../services/useAxios';
 import { useMensajes } from '../services/useMensajes';
-import type { ObjectError, ListaEmpleados } from '../components/models';
+import type {
+  EntradasRegistradas,
+  ListaEmpleados,
+  ObjectError,
+} from '../components/models';
 import { esHorarioNocturno, deducirMensajeError } from '../utils/AppUtils';
 import {
   NuevoHorario,
@@ -324,5 +328,24 @@ export const verificarDispositivoMaster = async (
   } else {
     handleDispositivo();
     return false;
+  }
+};
+
+export const obtenerAsistenciasFecha = async (
+  codigo: number,
+  fecha: string
+) => {
+  try {
+    const asistencias: EntradasRegistradas = await get(
+      '/obtener_asistencias_por_fecha',
+      {
+        codigo,
+        fecha,
+      }
+    );
+    return asistencias.objetos;
+  } catch (error) {
+    deducirMensajeError(error as ObjectError);
+    return [];
   }
 };

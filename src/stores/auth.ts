@@ -6,6 +6,7 @@ export const useAuthStore = defineStore('auth', () => {
   const usuario = ref('');
   const codigo = ref(0);
   const appCodigo = ref(0);
+  const empresaCodigo = ref(0);
   // const API_URL = ref(process.env.API_URL);
   const estaLogeado = ref(false);
   const url = ref(window.location.href);
@@ -86,6 +87,7 @@ export const useAuthStore = defineStore('auth', () => {
     usuario,
     codigo,
     appCodigo,
+    empresaCodigo,
     API_URL,
     PATH,
     estaLogeado,

@@ -78,28 +78,6 @@ const routes: RouteRecordRaw[] = [
     ],
   },
   {
-    path: '/registro_asistencia',
-    component: () => import('layouts/MainLayout.vue'),
-    children: [
-      {
-        path: '',
-        component: () => import('pages/RegistroAsistenciaPage.vue'),
-        beforeEnter: multiguard([estaLogeado]),
-      },
-    ],
-  },
-  {
-    path: '/registro_salida',
-    component: () => import('layouts/MainLayout.vue'),
-    children: [
-      {
-        path: '',
-        component: () => import('pages/RegistroSalidaPage.vue'),
-        beforeEnter: multiguard([estaLogeado]),
-      },
-    ],
-  },
-  {
     path: '/registrar_entrada_salida',
     component: () => import('layouts/MainLayout.vue'),
     children: [
