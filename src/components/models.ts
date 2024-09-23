@@ -1,3 +1,5 @@
+import { Empresa } from '../components/comun/empresaModel';
+
 export interface Todo {
   id: number;
   content: string;
@@ -64,6 +66,8 @@ export interface Session {
   appCodigo: number;
   login: string;
   clave: string;
+  empresa: Empresa;
+  empresas: Empresa[];
 }
 
 export interface RespuestaCoordenadas {

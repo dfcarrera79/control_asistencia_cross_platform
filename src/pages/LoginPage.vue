@@ -5,19 +5,29 @@ import { useAuthStore } from '../stores/auth';
 import { Session } from '../components/models';
 import { useAxios } from '../services/useAxios';
 import { useMensajes } from '../services/useMensajes';
-import type { ObjectError, Opcion } from '../components/models';
 import { deducirMensajeError } from '../utils/AppUtils';
 import { handleResponse } from '../services/useHorarios';
+import type { Empresa } from '../components/comun/empresaModel';
+import type { ObjectError, Opcion } from '../components/models';
 import { LocalStorage, Loading, QSpinnerFacebook } from 'quasar';
+
+import EmpresasComponent from '../components/EmpresasComponent.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
+const editorRegistro = ref(false);
 const opcion = ref<Opcion | null>(null);
-const empresa = ref<Opcion | null>(null);
-const empresas = ref([
-  { label: 'Apromed', valor: 1 },
-  { label: 'Cooperativa TAG...', valor: 2 },
-]);
+const db_empresas = 'db_empresas_controlasistencias';
+const empresa = ref<Empresa>({
+  codigo_empresa: 0,
+  ruc: '',
+  index: 0,
+  razon_social: '',
+  nombre_comercial: '',
+  url_local_api: '',
+  url_publico_api: '',
+});
+const empresas = ref<Empresa[]>([]);
 const options = ref([
   { label: 'Conexión Local', valor: 1 },
   { label: 'Conexión por Internet', valor: 2 },
@@ -43,7 +53,30 @@ const emailRule: ((v: string) => string | boolean)[] = [
 const codigo = ref(0);
 const usuario = ref('');
 
+const cargarEmpresas = () => {
+  const ls_empresas = LocalStorage.getItem<Array<Empresa>>(db_empresas);
+  console.log('[LS EMPRESAS]', JSON.stringify(ls_empresas));
+  if (ls_empresas) {
+    ls_empresas.forEach((it, index) => {
+      console.log('[IT]: ', JSON.stringify(it));
+      it.index = index;
+      empresas.value.push(it);
+      console.log('[EMPRESAS DESDE LOGIN]: ', JSON.stringify(empresas.value));
+      if (index === 0) {
+        empresa.value = it;
+        authStore.empresa = empresa.value;
+      }
+    });
+    authStore.empresasRegistradas = ls_empresas.length;
+  }
+  LocalStorage.set(db_empresas, empresas.value);
+};
+
 onMounted(() => {
+  cargarEmpresas();
+  if (authStore.empresa) {
+    empresa.value = authStore.empresa;
+  }
   const session: Session | null = LocalStorage.getItem('session');
   id.value = session?.login || '';
   usuario.value = session?.usuario || '';
@@ -220,6 +253,11 @@ watch(opcion, () => {
         </q-card-actions>
       </q-card>
     </q-dialog>
+    <EmpresasComponent
+      v-model:editorRegistro="editorRegistro"
+      v-model:empresa="empresa"
+      v-model:empresas="empresas"
+    />
 
     <q-card class="shadow-8 bg-white" style="width: 300px; height: 380px">
       <div class="row bg-blue-8 justify-center q-pa-xs">
@@ -230,14 +268,23 @@ watch(opcion, () => {
         >
       </div>
       <div class="row">
-        <div class="column col-xs-12 q-pa-sm">
-          <q-select
-            outlined
-            dense
-            v-model="empresa"
-            :options="empresas"
-            label="Seleccione la empresa"
-            option-label="label"
+        <div class="row justify-center q-pa-sm">
+          <div style="min-width: 240px">
+            <q-select
+              outlined
+              dense
+              v-model="empresa"
+              :options="empresas"
+              label="Seleccione la empresa"
+              option-label="nombre_comercial"
+            />
+          </div>
+          <q-btn
+            flat
+            round
+            color="primary"
+            icon="more_vert"
+            @click="editorRegistro = true"
           />
         </div>
         <div class="column col-xs-12 q-pa-sm">
@@ -280,6 +327,11 @@ watch(opcion, () => {
             color="primary"
             label="Ingresar"
             @click="logearse()"
+            :disable="
+              id.trim().length === 0 ||
+              clave.trim().length === 0 ||
+              authStore.empresa?.nombre_comercial.trim().length === 0
+            "
           />
         </div>
       </div>

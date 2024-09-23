@@ -1,17 +1,17 @@
 <script setup lang="ts">
+import { LocalStorage } from 'quasar';
 import { Device } from '@capacitor/device';
 import { useAuthStore } from '../stores/auth';
 import { computed, onMounted, ref } from 'vue';
 import { DeviceId } from '../components/models';
 import { useAxios } from '../services/useAxios';
-import { useQuasar, LocalStorage } from 'quasar';
 import { useMensajes } from '../services/useMensajes';
 import { deducirMensajeError } from '../utils/AppUtils';
 import type { ObjectError } from '../components/models';
+import { handleResponse } from '../services/useHorarios';
 
 // Data
 const id = ref('');
-const $q = useQuasar();
 const check = ref(false);
 const { get, post } = useAxios();
 const authStore = useAuthStore();
@@ -53,13 +53,7 @@ const registrarDispositivo = async () => {
     if (response.error === 'N') {
       check.value = true;
     }
-    // Handle the response accordingly
-    $q.notify({
-      color: response.error === 'N' ? 'green-4' : 'red-5',
-      textColor: 'white',
-      icon: response.error === 'N' ? 'cloud_done' : 'warning',
-      message: response.mensaje,
-    });
+    handleResponse(response.mensaje);
   } catch (error) {
     deducirMensajeError(error as ObjectError);
   }

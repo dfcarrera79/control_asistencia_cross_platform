@@ -218,3 +218,16 @@ export const formatoNocturno = (
     jornada.split(' ')[1]
   } (${finish})`;
 };
+
+export const removeObjectFromArray = (
+  arrayObj: Array<any>,
+  key: string,
+  value: any
+): boolean => {
+  const index = arrayObj.findIndex((obj) => obj[key] === value);
+  if (index > -1) {
+    arrayObj.splice(index, 1);
+    return true;
+  }
+  return false;
+};

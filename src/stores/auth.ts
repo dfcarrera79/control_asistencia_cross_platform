@@ -1,22 +1,71 @@
 import { defineStore } from 'pinia';
-import { LocalStorage } from 'quasar';
 import { computed, ref } from 'vue';
+import { LocalStorage } from 'quasar';
+import { Empresa } from '../components/comun/empresaModel';
+import { Servidor } from '../components/comun/servidorModel';
 
 export const useAuthStore = defineStore('auth', () => {
   const usuario = ref('');
   const codigo = ref(0);
   const appCodigo = ref(0);
   const empresaCodigo = ref(0);
-  // const API_URL = ref(process.env.API_URL);
+  const empresasRegistradas = ref(0);
   const estaLogeado = ref(false);
   const url = ref(window.location.href);
   const token = ref('');
   const login = ref('');
+  const IMAGE_PATH = ref(
+    '/opt/control-asistencia/control_asistencia_api/src/public/fotos'
+  );
+  const servidores = ref<Servidor[]>([
+    {
+      id: 1,
+      nombre: 'LoxaSoluciones 1',
+      urlDesarrollo: 'http://192.168.50.14:8080/apisage/webresources/empresas',
+      urlApiSSL:
+        'https://www.loxasoluciones-cloud.com:8181/apisage/webresources/empresas',
+      urlApi:
+        'https://www.loxasoluciones-cloud.com:8181/apisage/webresources/empresas',
+    },
+    // {
+    //   id: 2,
+    //   nombre: 'PIÑAS INTERPROVINCIAL',
+    //   urlDesarrollo: 'http://192.168.50.14:8080/apisage/webresources/empresas',
+    //   urlApiSSL:
+    //     'http://www.loxasoluciones-cloud1.com:8080/apisage/webresources/empresas',
+    //   urlApi:
+    //     'http://www.loxasoluciones-cloud1.com:8080/apisage/webresources/empresas',
+    // },
+    // {
+    //   id: 3,
+    //   nombre: 'CIFA INTERNACIONAL',
+    //   urlDesarrollo: 'http://192.168.50.14:8080/apisage/webresources/empresas',
+    //   urlApiSSL: 'http://181.39.106.50:8080/apisage/webresources/empresas',
+    //   urlApi: 'http://181.39.106.50:8080/apisage/webresources/empresas',
+    // },
+  ]);
+  const servidor = ref<Servidor>(servidores.value[0]);
+  const apiEmpresas = ref(servidor.value.urlApiSSL);
+  const empresa = ref<Empresa | null>(null);
+  const empresaCero = ref<Empresa>({
+    codigo_empresa: 0,
+    ruc: '',
+    index: 0,
+    razon_social: '',
+    nombre_comercial: '',
+    url_local_api: '',
+    url_publico_api: '',
+  });
 
+  // const API_URL = computed(() => {
+  //   return appCodigo.value == 1
+  //     ? process.env.API_URL_LOCAL
+  //     : process.env.API_URL;
+  // });
   const API_URL = computed(() => {
     return appCodigo.value == 1
-      ? process.env.API_URL_LOCAL
-      : process.env.API_URL;
+      ? empresa.value?.url_local_api
+      : empresa.value?.url_publico_api;
   });
 
   const PATH = computed(() => `${API_URL.value}/static`);
@@ -98,6 +147,13 @@ export const useAuthStore = defineStore('auth', () => {
     getHttpHeaders,
     getCodigo,
     getUsuario,
+    empresa,
+    empresaCero,
+    empresasRegistradas,
+    servidor,
+    servidores,
+    apiEmpresas,
+    IMAGE_PATH,
     cerrarSesion,
     iniciarSesion,
     actualizarDatos,

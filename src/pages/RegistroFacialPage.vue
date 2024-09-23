@@ -23,7 +23,7 @@ const check = ref(false);
 const confirmar = ref(false);
 const showCamera = ref(false);
 const authStore = useAuthStore();
-const path = process.env.IMAGE_PATH;
+const path = authStore.IMAGE_PATH;
 const replacedPath = authStore.PATH;
 const { get, post } = useAxios();
 
