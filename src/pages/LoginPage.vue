@@ -55,13 +55,10 @@ const usuario = ref('');
 
 const cargarEmpresas = () => {
   const ls_empresas = LocalStorage.getItem<Array<Empresa>>(db_empresas);
-  console.log('[LS EMPRESAS]', JSON.stringify(ls_empresas));
   if (ls_empresas) {
     ls_empresas.forEach((it, index) => {
-      console.log('[IT]: ', JSON.stringify(it));
       it.index = index;
       empresas.value.push(it);
-      console.log('[EMPRESAS DESDE LOGIN]: ', JSON.stringify(empresas.value));
       if (index === 0) {
         empresa.value = it;
         authStore.empresa = empresa.value;

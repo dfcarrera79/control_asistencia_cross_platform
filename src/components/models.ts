@@ -66,8 +66,6 @@ export interface Session {
   appCodigo: number;
   login: string;
   clave: string;
-  empresa: Empresa;
-  empresas: Empresa[];
 }
 
 export interface RespuestaCoordenadas {
