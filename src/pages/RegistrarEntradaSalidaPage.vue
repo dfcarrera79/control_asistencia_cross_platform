@@ -148,8 +148,6 @@ onMounted(async () => {
 
     const jornadas = determinarNumeroDeJornadas(horario.value.details);
 
-    console.log('[JORNADAS]: ', jornadas);
-
     if (jornadas == 2) {
       let si_no = isCurrentTimeGreaterThanTime(horario.value, currentDate);
       console.log('[SI NO]: ', si_no);
@@ -179,6 +177,10 @@ onMounted(async () => {
         } else if (salida?.length == 1) {
           numeroJornadas.value = 2;
           entrada.value = true;
+
+          if (si_no == 2) {
+            registradoFinal.value = true;
+          }
 
           if (ent[0].jornada == 2) {
             numeroJornadas.value = 2;

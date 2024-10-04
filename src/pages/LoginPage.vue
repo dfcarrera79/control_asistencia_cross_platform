@@ -102,7 +102,7 @@ const logearse = async () => {
   if (id.value.trim().length === 0) {
     mostrarMensaje(
       'Error',
-      'Es necesario ingresar su nombre de usuario para continuar'
+      'Es necesario ingresar su usuario para poder acceder'
     );
     return;
   }
