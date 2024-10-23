@@ -61,7 +61,7 @@ const text = ref('');
 const codigo = ref(0);
 const targetLatitude = ref(0);
 const targetLongitude = ref(0);
-const maxDistance = 50;
+const maxDistance = 100;
 const distance = ref(0);
 const sinHorarios = ref(false);
 const esNocturno = ref<boolean>(false);
@@ -434,6 +434,8 @@ const printCurrentPosition = async () => {
   // If permissions are not granted, request them
   if (permissionStatus.coarseLocation === 'granted') {
     const coordinates = await Geolocation.getCurrentPosition();
+    // Log the coordinates
+    console.log('Current Position:', JSON.stringify(coordinates));
     // Update the state of the newPos ref
     newPos.value.latitude = coordinates.coords.latitude;
     newPos.value.longitude = coordinates.coords.longitude;
@@ -470,19 +472,35 @@ const scanner = async () => {
   }
 };
 
+// const obtenerCoordenadas = async (nombre: string) => {
+//   const respuesta: RespuestaCoordenadas = await get(
+//     '/obtener_coordenadas_almacen',
+//     { alm_nomcom: nombre }
+//   );
+//   console.log('[OBTENER COORDENADAS]: ', JSON.stringify(respuesta));
+
+//   if (respuesta.error === 'N') {
+//     const firstItem = respuesta.objetos[0];
+//     targetLatitude.value = firstItem.lat;
+//     targetLongitude.value = firstItem.long;
+//   } else {
+//     mostrarMensaje('Error', respuesta.mensaje);
+//     return;
+//   }
+// };
+
 const obtenerCoordenadas = async (nombre: string) => {
   const respuesta: RespuestaCoordenadas = await get(
     '/obtener_coordenadas_almacen',
     { alm_nomcom: nombre }
   );
+  console.log('[OBTENER COORDENADAS]: ', JSON.stringify(respuesta));
 
   if (respuesta.error === 'N') {
-    const firstItem = respuesta.objetos[0];
-    targetLatitude.value = firstItem.lat;
-    targetLongitude.value = firstItem.long;
+    return respuesta.objetos[0];
   } else {
     mostrarMensaje('Error', respuesta.mensaje);
-    return;
+    return null; // Retornar null explícitamente
   }
 };
 
@@ -495,13 +513,27 @@ const startScan = async () => {
   // if the result has content
   if (result) {
     resultado.value = result; // this is the decoded string
-    await obtenerCoordenadas(resultado.value);
+    const coordenadasResponse = await obtenerCoordenadas(resultado.value);
+    // Verificamos si el objeto es válido antes de acceder a las propiedades
+    if (coordenadasResponse) {
+      targetLatitude.value = coordenadasResponse.lat;
+      targetLongitude.value = coordenadasResponse.long;
+    } else {
+      mostrarMensaje('Error', 'No se pudieron obtener las coordenadas');
+    }
+
+    console.log('[NEW POS LATITUDE]: ', newPos.value.latitude);
+    console.log('[NEW POS LONGITUDE]: ', newPos.value.longitude);
+    console.log('[TARGET LATITUDE]: ', targetLatitude.value);
+    console.log('[TARGET LONGITUDE]: ', targetLongitude.value);
+
     distance.value = obtenerDistancia(
       newPos.value.latitude,
       newPos.value.longitude,
       targetLatitude.value,
       targetLongitude.value
     );
+    console.log('[DISTANCIA]: ', distance.value);
 
     if (distance.value <= maxDistance && check.value === true) {
       checkSelfie.value = await takeSelfie();
